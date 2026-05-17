@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft, Fuel, Settings, Gauge } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { BookingForm } from '@/components/BookingForm'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { createSupabaseAdminClient } from '@/lib/supabase'
 import { formatCurrency } from '@/lib/pricing'
 
 interface PageProps {
@@ -13,7 +13,7 @@ interface PageProps {
 
 export default async function CarPage({ params }: PageProps) {
   const { id } = await params
-  const supabase = await createSupabaseServerClient()
+  const supabase = createSupabaseAdminClient()
 
   const [carResult, reservationsResult] = await Promise.all([
     supabase.from('cars').select('*').eq('id', id).single(),
