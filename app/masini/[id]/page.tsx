@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Fuel, Settings, Gauge } from 'lucide-react'
@@ -8,9 +9,36 @@ import { BookingForm } from '@/components/BookingForm'
 import { createSupabaseAdminClient } from '@/lib/supabase'
 import { CarImageGallery } from '@/components/CarImageGallery'
 import { formatCurrency } from '@/lib/pricing'
+import { SITE_URL, BUSINESS } from '@/lib/config'
 
 interface PageProps {
   params: Promise<{ id: string }>
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params
+  const supabase = createSupabaseAdminClient()
+  const { data: car } = await supabase.from('cars').select('name, description, price_per_day, image_url').eq('id', id).single()
+  if (!car) return {}
+
+  const title = `${car.name} — Închirieri Auto Alba Iulia`
+  const description = car.description
+    ?? `Închiriază ${car.name} în Alba Iulia. ${car.price_per_day} RON/zi, prețuri transparente, plată la ridicare.`
+  const url = `${SITE_URL}/masini/${id}`
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: 'website',
+      siteName: BUSINESS.name,
+      ...(car.image_url ? { images: [{ url: car.image_url, alt: car.name }] } : {}),
+    },
+  }
 }
 
 export default async function CarPage({ params }: PageProps) {

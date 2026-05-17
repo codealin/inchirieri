@@ -1,10 +1,58 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Phone, CheckCircle2, Star, MapPin, Navigation } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Navbar } from '@/components/Navbar'
 import { CarCard } from '@/components/CarCard'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { SITE_URL, BUSINESS } from '@/lib/config'
 import type { Car } from '@/types/database'
+
+export const metadata: Metadata = {
+  title: `Închirieri Auto Alba Iulia | ${BUSINESS.name}`,
+  description: 'Închiriază o mașină în Alba Iulia. Skoda Octavia, Seat Leon, Skoda Fabia, MG4 Electric. Prețuri de la 85 RON/zi, plată la ridicare, fără surprize.',
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    title: `Închirieri Auto Alba Iulia | ${BUSINESS.name}`,
+    description: 'Mașini curate, verificate, prețuri transparente. Rezervare online simplă, plată la ridicare.',
+    url: SITE_URL,
+  },
+}
+
+const localBusinessJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'AutoRental',
+  name: BUSINESS.name,
+  description: BUSINESS.description,
+  url: SITE_URL,
+  telephone: BUSINESS.phone,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Micești',
+    addressLocality: 'Alba Iulia',
+    addressRegion: 'Alba',
+    postalCode: '510000',
+    addressCountry: 'RO',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: 46.0598,
+    longitude: 23.5531,
+  },
+  openingHoursSpecification: {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    opens: '08:00',
+    closes: '20:00',
+  },
+  priceRange: '85-150 RON/zi',
+  currenciesAccepted: 'RON',
+  paymentAccepted: 'Cash',
+  areaServed: {
+    '@type': 'City',
+    name: 'Alba Iulia',
+  },
+}
 
 async function getCars(): Promise<Car[]> {
   try {
@@ -26,6 +74,10 @@ export default async function HomePage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+      />
       <Navbar />
 
       {/* Hero */}
