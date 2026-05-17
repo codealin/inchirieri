@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { Phone } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 export function Navbar() {
   return (
@@ -12,12 +11,13 @@ export function Navbar() {
           <span className="text-xl font-bold tracking-tight">Expert Doi Trans</span>
         </Link>
 
-        <a href="tel:+40732083657">
-          <Button size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700 text-white border-0">
-            <Phone className="h-4 w-4" />
-            <span className="hidden sm:inline">+40 732 083 657</span>
-            <span className="sm:hidden">Sună</span>
-          </Button>
+        <a
+          href="tel:+40732083657"
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+        >
+          <Phone className="h-4 w-4" />
+          <span className="hidden sm:inline">+40 732 083 657</span>
+          <span className="sm:hidden">Sună</span>
         </a>
       </div>
     </header>
