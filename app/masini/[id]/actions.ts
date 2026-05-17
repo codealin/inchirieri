@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseAdminClient } from '@/lib/supabase'
 import { calculateTotalPrice } from '@/lib/pricing'
+import { sendReservationEmails } from '@/lib/email'
 
 interface ReservationData {
   carId: string
@@ -59,6 +60,23 @@ export async function submitReservation(
 
   if (error) {
     return { error: 'Eroare la salvarea rezervării. Încearcă din nou sau sună-ne direct.' }
+  }
+
+  // Fetch car name for the email (non-blocking — if it fails, we still redirect)
+  try {
+    const { data: car } = await supabase.from('cars').select('name').eq('id', carId).single()
+    await sendReservationEmails({
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      customerEmail: customerEmail.trim(),
+      carName: car?.name ?? 'Mașină',
+      startDate,
+      endDate,
+      totalPrice,
+      notes: notes.trim(),
+    })
+  } catch {
+    // Email failure doesn't block the reservation
   }
 
   redirect('/rezervare-confirmata')
