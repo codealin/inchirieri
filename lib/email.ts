@@ -2,10 +2,7 @@ import { Resend } from 'resend'
 import { format } from 'date-fns'
 import { ro } from 'date-fns/locale'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 const FROM = 'Expert Doi Trans <onboarding@resend.dev>'
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL!
 
 interface EmailData {
   customerName: string
@@ -131,13 +128,18 @@ function customerHtml(d: { customerName: string; carName: string; start: string;
 }
 
 export async function sendReservationEmails(data: EmailData) {
+  const apiKey = process.env.RESEND_API_KEY
+  const adminEmail = process.env.ADMIN_EMAIL
+  if (!apiKey || !adminEmail) return
+
+  const resend = new Resend(apiKey)
   const start = formatDate(data.startDate)
   const end = formatDate(data.endDate)
 
   const emailPromises = [
     resend.emails.send({
       from: FROM,
-      to: ADMIN_EMAIL,
+      to: adminEmail,
       subject: `🚗 Rezervare nouă: ${data.carName} — ${data.customerName}`,
       html: adminHtml({ ...data, start, end }),
     }),
