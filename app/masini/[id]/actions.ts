@@ -75,8 +75,8 @@ export async function submitReservation(
       totalPrice,
       notes: notes.trim(),
     })
-  } catch {
-    // Email failure doesn't block the reservation
+  } catch (e) {
+    console.error('[email] sendReservationEmails failed:', e)
   }
 
   redirect('/rezervare-confirmata')

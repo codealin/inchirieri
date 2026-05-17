@@ -130,6 +130,7 @@ function customerHtml(d: { customerName: string; carName: string; start: string;
 export async function sendReservationEmails(data: EmailData) {
   const apiKey = process.env.RESEND_API_KEY
   const adminEmail = process.env.ADMIN_EMAIL
+  console.log('[email] apiKey present:', !!apiKey, '| adminEmail:', adminEmail ?? 'MISSING')
   if (!apiKey || !adminEmail) return
 
   const resend = new Resend(apiKey)
