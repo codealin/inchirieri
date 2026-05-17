@@ -1,12 +1,12 @@
 export const dynamic = 'force-dynamic'
 
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, Fuel, Settings, Gauge } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { BookingForm } from '@/components/BookingForm'
 import { createSupabaseAdminClient } from '@/lib/supabase'
+import { CarImageGallery } from '@/components/CarImageGallery'
 import { formatCurrency } from '@/lib/pricing'
 
 interface PageProps {
@@ -17,13 +17,18 @@ export default async function CarPage({ params }: PageProps) {
   const { id } = await params
   const supabase = createSupabaseAdminClient()
 
-  const [carResult, reservationsResult] = await Promise.all([
+  const [carResult, reservationsResult, imagesResult] = await Promise.all([
     supabase.from('cars').select('*').eq('id', id).single(),
     supabase
       .from('reservations')
       .select('start_date, end_date')
       .eq('car_id', id)
       .in('status', ['pending', 'approved']),
+    supabase
+      .from('car_images')
+      .select('url')
+      .eq('car_id', id)
+      .order('position', { ascending: true }),
   ])
 
   if (carResult.error || !carResult.data) {
@@ -32,6 +37,8 @@ export default async function CarPage({ params }: PageProps) {
 
   const car = carResult.data
   const bookedRanges = reservationsResult.data ?? []
+  const additionalImages = (imagesResult.data ?? []).map((r) => r.url)
+  const allImages = [car.image_url, ...additionalImages].filter(Boolean) as string[]
 
   const specs = [
     { icon: Gauge, label: 'Motor', value: car.engine },
@@ -55,35 +62,7 @@ export default async function CarPage({ params }: PageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Left: car details */}
           <div>
-            <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-100 mb-6">
-              {car.image_url ? (
-                <Image
-                  src={car.image_url}
-                  alt={car.name}
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="80"
-                    height="80"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1"
-                  >
-                    <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3" />
-                    <rect x="9" y="11" width="14" height="10" rx="2" />
-                    <circle cx="12" cy="19" r="1" />
-                    <circle cx="20" cy="19" r="1" />
-                  </svg>
-                </div>
-              )}
-            </div>
+            <CarImageGallery images={allImages} carName={car.name} />
 
             <h1 className="text-3xl font-bold mb-2">{car.name}</h1>
             <div className="flex items-baseline gap-1 mb-6">

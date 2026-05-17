@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Loader2, ImagePlus, X } from 'lucide-react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,8 +17,14 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { formatCurrency } from '@/lib/pricing'
-import { createCar, updateCar, deleteCar, type CarFormData } from '@/app/admin/actions'
+import {
+  createCar, updateCar, deleteCar,
+  getCarImages, addCarImage, deleteCarImage,
+  type CarFormData,
+} from '@/app/admin/actions'
 import type { Car } from '@/types/database'
+
+type CarImageEntry = { id: string; url: string; position: number }
 
 const EMPTY_FORM: CarFormData = {
   name: '',
@@ -41,6 +48,9 @@ export function CarManager({ initialCars }: CarManagerProps) {
   const [form, setForm] = useState<CarFormData>(EMPTY_FORM)
   const [formError, setFormError] = useState('')
   const [isPending, startTransition] = useTransition()
+  const [carImages, setCarImages] = useState<CarImageEntry[]>([])
+  const [newImageUrl, setNewImageUrl] = useState('')
+  const [isImagePending, startImageTransition] = useTransition()
   const router = useRouter()
 
   useEffect(() => {
@@ -67,7 +77,31 @@ export function CarManager({ initialCars }: CarManagerProps) {
       description: car.description ?? '',
     })
     setFormError('')
+    setCarImages([])
+    setNewImageUrl('')
     setDialogOpen(true)
+    startImageTransition(async () => {
+      const imgs = await getCarImages(car.id)
+      setCarImages(imgs)
+    })
+  }
+
+  function handleAddImage() {
+    if (!editingCar || !newImageUrl.trim()) return
+    const url = newImageUrl.trim()
+    startImageTransition(async () => {
+      const result = await addCarImage(editingCar.id, url)
+      if ('error' in result) return
+      setCarImages((prev) => [...prev, result])
+      setNewImageUrl('')
+    })
+  }
+
+  function handleDeleteImage(imageId: string) {
+    startImageTransition(async () => {
+      await deleteCarImage(imageId)
+      setCarImages((prev) => prev.filter((img) => img.id !== imageId))
+    })
   }
 
   function handleFormChange(
@@ -285,6 +319,57 @@ export function CarManager({ initialCars }: CarManagerProps) {
                 rows={2}
               />
             </div>
+
+            {/* Additional images — only when editing */}
+            {editingCar && (
+              <div className="space-y-3 pt-3 border-t">
+                <Label className="flex items-center gap-1.5">
+                  <ImagePlus className="h-4 w-4" />
+                  Fotografii suplimentare
+                </Label>
+
+                {isImagePending && carImages.length === 0 && (
+                  <p className="text-xs text-muted-foreground">Se încarcă...</p>
+                )}
+
+                {carImages.length > 0 && (
+                  <div className="flex gap-2 flex-wrap">
+                    {carImages.map((img) => (
+                      <div key={img.id} className="relative group w-20 h-14 rounded-lg overflow-hidden border bg-slate-100">
+                        <Image src={img.url} alt="foto" fill className="object-cover" sizes="80px" />
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteImage(img.id)}
+                          disabled={isImagePending}
+                          className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        >
+                          <X className="h-4 w-4 text-white" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="https://... (URL imagine din Storage)"
+                    value={newImageUrl}
+                    onChange={(e) => setNewImageUrl(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddImage())}
+                    disabled={isImagePending}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleAddImage}
+                    disabled={!newImageUrl.trim() || isImagePending}
+                    className="shrink-0"
+                  >
+                    Adaugă
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center gap-2">
               <input

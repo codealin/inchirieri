@@ -88,3 +88,41 @@ export async function deleteCar(id: string) {
   revalidatePath('/admin/masini')
   revalidatePath('/')
 }
+
+// ── Car image actions ────────────────────────────────────────────────────────
+
+export async function getCarImages(carId: string) {
+  const supabase = createSupabaseAdminClient()
+  const { data } = await supabase
+    .from('car_images')
+    .select('id, url, position')
+    .eq('car_id', carId)
+    .order('position', { ascending: true })
+  return data ?? []
+}
+
+export async function addCarImage(carId: string, url: string) {
+  const supabase = createSupabaseAdminClient()
+  const { data: last } = await supabase
+    .from('car_images')
+    .select('position')
+    .eq('car_id', carId)
+    .order('position', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const position = (last?.position ?? -1) + 1
+  const { data, error } = await supabase
+    .from('car_images')
+    .insert({ car_id: carId, url, position })
+    .select()
+    .single()
+  if (error) return { error: error.message }
+  revalidatePath('/')
+  return data as { id: string; url: string; position: number }
+}
+
+export async function deleteCarImage(imageId: string) {
+  const supabase = createSupabaseAdminClient()
+  await supabase.from('car_images').delete().eq('id', imageId)
+  revalidatePath('/')
+}

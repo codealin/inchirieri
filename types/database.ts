@@ -11,6 +11,14 @@ export interface Car {
   created_at: string
 }
 
+export interface CarImage {
+  id: string
+  car_id: string
+  url: string
+  position: number
+  created_at: string
+}
+
 export interface Reservation {
   id: string
   car_id: string
