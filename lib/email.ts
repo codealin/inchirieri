@@ -130,32 +130,22 @@ function customerHtml(d: { customerName: string; carName: string; start: string;
 export async function sendReservationEmails(data: EmailData) {
   const apiKey = process.env.RESEND_API_KEY
   const adminEmail = process.env.ADMIN_EMAIL
-  console.log('[email] apiKey present:', !!apiKey, '| adminEmail:', adminEmail ?? 'MISSING')
   if (!apiKey || !adminEmail) return
 
   const resend = new Resend(apiKey)
   const start = formatDate(data.startDate)
   const end = formatDate(data.endDate)
 
-  const emailPromises = [
-    resend.emails.send({
-      from: FROM,
-      to: adminEmail,
-      subject: `🚗 Rezervare nouă: ${data.carName} — ${data.customerName}`,
-      html: adminHtml({ ...data, start, end }),
-    }),
-  ]
+  // Admin notification — always sent
+  await resend.emails.send({
+    from: FROM,
+    to: adminEmail,
+    subject: `🚗 Rezervare nouă: ${data.carName} — ${data.customerName}`,
+    html: adminHtml({ ...data, start, end }),
+  })
 
-  if (data.customerEmail) {
-    emailPromises.push(
-      resend.emails.send({
-        from: FROM,
-        to: data.customerEmail,
-        subject: `Rezervare primită — ${data.carName} · Expert Doi Trans`,
-        html: customerHtml({ customerName: data.customerName, carName: data.carName, start, end, totalPrice: data.totalPrice }),
-      })
-    )
-  }
-
-  await Promise.allSettled(emailPromises)
+  // Customer confirmation — activat după verificarea domeniului în Resend
+  // if (data.customerEmail) {
+  //   await resend.emails.send({ from: FROM, to: data.customerEmail, ... })
+  // }
 }
