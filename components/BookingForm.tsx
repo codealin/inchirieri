@@ -27,11 +27,17 @@ export function BookingForm({ car, bookedRanges }: BookingFormProps) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  // Parse date string as local time (not UTC) to avoid timezone shift
+  function localDate(str: string): Date {
+    const [y, m, d] = str.split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
+
   const disabledDays = [
     { before: today },
     ...bookedRanges.map((r) => ({
-      from: new Date(r.start_date),
-      to: new Date(r.end_date),
+      from: localDate(r.start_date),
+      to: localDate(r.end_date),
     })),
   ]
 
