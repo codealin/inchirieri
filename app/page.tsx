@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Phone, CheckCircle2 } from 'lucide-react'
+import { Phone, CheckCircle2, Star, MapPin, Navigation } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Navbar } from '@/components/Navbar'
 import { CarCard } from '@/components/CarCard'
@@ -106,6 +106,102 @@ export default async function HomePage() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-16 px-4 bg-slate-50">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold mb-2 text-center">Ce spun clienții noștri</h2>
+          <p className="text-muted-foreground text-center mb-10">
+            Experiențe reale de la persoane care au ales Expert Doi Trans.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                name: 'Alexandru M.',
+                location: 'Alba Iulia',
+                text: 'Mașina era curată, bine întreținută și gata la ora stabilită. Prețul afișat a fost exact prețul plătit. O să revin cu siguranță.',
+              },
+              {
+                name: 'Maria D.',
+                location: 'Cluj-Napoca',
+                text: 'Am închiriat Skoda Octavia pentru o săptămână. Proces simplu, fără birocrație. Oameni serioși și de încredere.',
+              },
+              {
+                name: 'Bogdan T.',
+                location: 'Sibiu',
+                text: 'Cel mai simplu proces de închiriere auto pe care l-am întâlnit. Rezervare online, ridicare rapidă, fără surprize la final.',
+              },
+            ].map((review) => (
+              <div key={review.name} className="bg-white border rounded-xl p-6 shadow-sm">
+                <div className="flex gap-0.5 mb-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-slate-700 mb-4 leading-relaxed">&ldquo;{review.text}&rdquo;</p>
+                <div>
+                  <p className="font-semibold text-sm">{review.name}</p>
+                  <p className="text-muted-foreground text-xs">{review.location}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Location & Map */}
+      <section className="py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold mb-2">Unde ne găsești</h2>
+          <p className="text-muted-foreground mb-8">
+            Ridicarea și returnarea mașinii se face din Alba Iulia, Micești.
+          </p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="space-y-5">
+              <div className="flex gap-3">
+                <MapPin className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-semibold">Adresă</p>
+                  <p className="text-muted-foreground text-sm">Alba Iulia, Micești</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Phone className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-semibold">Telefon</p>
+                  <a
+                    href="tel:+40732083657"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    +40 732 083 657
+                  </a>
+                </div>
+              </div>
+              <a
+                href="https://maps.app.goo.gl/cY2PnrWXhNDqAvJXA"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors"
+              >
+                <Navigation className="h-4 w-4" />
+                Obține direcții
+              </a>
+            </div>
+            <div className="lg:col-span-2 rounded-xl overflow-hidden border shadow-sm h-64 lg:h-80">
+              <iframe
+                src="https://www.google.com/maps?q=Expert+Doi+Trans+Micești+Alba+Iulia&output=embed"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Locație Expert Doi Trans"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
