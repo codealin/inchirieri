@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Pencil, Trash2, Loader2, ImagePlus, X } from 'lucide-react'
+import { Plus, Pencil, Trash2, Loader2, Upload, X, Images } from 'lucide-react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,7 +19,7 @@ import {
 import { formatCurrency } from '@/lib/pricing'
 import {
   createCar, updateCar, deleteCar,
-  getCarImages, addCarImage, deleteCarImage,
+  getCarImages, uploadCarImage, deleteCarImage,
   type CarFormData,
 } from '@/app/admin/actions'
 import type { Car } from '@/types/database'
@@ -49,8 +49,9 @@ export function CarManager({ initialCars }: CarManagerProps) {
   const [formError, setFormError] = useState('')
   const [isPending, startTransition] = useTransition()
   const [carImages, setCarImages] = useState<CarImageEntry[]>([])
-  const [newImageUrl, setNewImageUrl] = useState('')
+  const [uploadError, setUploadError] = useState('')
   const [isImagePending, startImageTransition] = useTransition()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -78,7 +79,7 @@ export function CarManager({ initialCars }: CarManagerProps) {
     })
     setFormError('')
     setCarImages([])
-    setNewImageUrl('')
+    setUploadError('')
     setDialogOpen(true)
     startImageTransition(async () => {
       const imgs = await getCarImages(car.id)
@@ -86,14 +87,23 @@ export function CarManager({ initialCars }: CarManagerProps) {
     })
   }
 
-  function handleAddImage() {
-    if (!editingCar || !newImageUrl.trim()) return
-    const url = newImageUrl.trim()
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!editingCar) return
+    const files = Array.from(e.target.files ?? [])
+    if (!files.length) return
+    e.target.value = ''
+    setUploadError('')
     startImageTransition(async () => {
-      const result = await addCarImage(editingCar.id, url)
-      if ('error' in result) return
-      setCarImages((prev) => [...prev, result])
-      setNewImageUrl('')
+      for (const file of files) {
+        const fd = new FormData()
+        fd.append('file', file)
+        const result = await uploadCarImage(editingCar.id, fd)
+        if ('error' in result) {
+          setUploadError(result.error ?? 'Eroare la upload.')
+          return
+        }
+        setCarImages((prev) => [...prev, result])
+      }
     })
   }
 
@@ -323,51 +333,72 @@ export function CarManager({ initialCars }: CarManagerProps) {
             {/* Additional images — only when editing */}
             {editingCar && (
               <div className="space-y-3 pt-3 border-t">
-                <Label className="flex items-center gap-1.5">
-                  <ImagePlus className="h-4 w-4" />
-                  Fotografii suplimentare
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-1.5">
+                    <Images className="h-4 w-4" />
+                    Fotografii suplimentare
+                  </Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isImagePending}
+                    className="gap-1.5 text-xs"
+                  >
+                    {isImagePending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Upload className="h-3.5 w-3.5" />
+                    )}
+                    {isImagePending ? 'Se încarcă...' : 'Încarcă poze'}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </div>
 
-                {isImagePending && carImages.length === 0 && (
-                  <p className="text-xs text-muted-foreground">Se încarcă...</p>
+                {carImages.length === 0 && !isImagePending && (
+                  <p className="text-xs text-muted-foreground py-2 text-center border border-dashed rounded-lg">
+                    Nicio fotografie suplimentară. Apasă "Încarcă poze" pentru a adăuga.
+                  </p>
                 )}
 
                 {carImages.length > 0 && (
                   <div className="flex gap-2 flex-wrap">
                     {carImages.map((img) => (
-                      <div key={img.id} className="relative group w-20 h-14 rounded-lg overflow-hidden border bg-slate-100">
-                        <Image src={img.url} alt="foto" fill className="object-cover" sizes="80px" />
+                      <div
+                        key={img.id}
+                        className="relative group w-24 h-16 rounded-lg overflow-hidden border bg-slate-100 shrink-0"
+                      >
+                        <Image
+                          src={img.url}
+                          alt="foto"
+                          fill
+                          className="object-cover"
+                          sizes="96px"
+                        />
                         <button
                           type="button"
                           onClick={() => handleDeleteImage(img.id)}
                           disabled={isImagePending}
-                          className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                         >
-                          <X className="h-4 w-4 text-white" />
+                          <X className="h-5 w-5 text-white" />
                         </button>
                       </div>
                     ))}
                   </div>
                 )}
 
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="https://... (URL imagine din Storage)"
-                    value={newImageUrl}
-                    onChange={(e) => setNewImageUrl(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddImage())}
-                    disabled={isImagePending}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleAddImage}
-                    disabled={!newImageUrl.trim() || isImagePending}
-                    className="shrink-0"
-                  >
-                    Adaugă
-                  </Button>
-                </div>
+                {uploadError && (
+                  <p className="text-xs text-red-600 bg-red-50 p-2 rounded">{uploadError}</p>
+                )}
               </div>
             )}
 

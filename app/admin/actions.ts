@@ -121,8 +121,61 @@ export async function addCarImage(carId: string, url: string) {
   return data as { id: string; url: string; position: number }
 }
 
+export async function uploadCarImage(carId: string, formData: FormData) {
+  const supabase = createSupabaseAdminClient()
+  const file = formData.get('file') as File
+  if (!file || file.size === 0) return { error: 'Fișier invalid.' }
+
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+  const path = `cars/${carId}/${Date.now()}.${ext}`
+
+  const { error: uploadError } = await supabase.storage
+    .from('cars')
+    .upload(path, file, { contentType: file.type })
+  if (uploadError) return { error: uploadError.message }
+
+  const { data: { publicUrl } } = supabase.storage.from('cars').getPublicUrl(path)
+
+  const { data: last } = await supabase
+    .from('car_images')
+    .select('position')
+    .eq('car_id', carId)
+    .order('position', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const position = (last?.position ?? -1) + 1
+
+  const { data, error: dbError } = await supabase
+    .from('car_images')
+    .insert({ car_id: carId, url: publicUrl, position })
+    .select()
+    .single()
+  if (dbError) return { error: dbError.message }
+
+  revalidatePath('/')
+  return data as { id: string; url: string; position: number }
+}
+
 export async function deleteCarImage(imageId: string) {
   const supabase = createSupabaseAdminClient()
+
+  const { data: img } = await supabase
+    .from('car_images')
+    .select('url')
+    .eq('id', imageId)
+    .single()
+
   await supabase.from('car_images').delete().eq('id', imageId)
+
+  if (img?.url) {
+    try {
+      const url = new URL(img.url)
+      const pathInBucket = url.pathname.replace('/storage/v1/object/public/cars/', '')
+      await supabase.storage.from('cars').remove([pathInBucket])
+    } catch {
+      // ignore storage errors — row is already deleted
+    }
+  }
+
   revalidatePath('/')
 }
