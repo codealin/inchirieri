@@ -37,16 +37,31 @@ export default function TractariLayout({ children }: { children: React.ReactNode
             </Link>
           </div>
 
-          <a
-            href="tel:+40732083657"
-            style={{ backgroundColor: '#ffffff', color: '#14532d' }}
-            className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:opacity-90 shrink-0"
-          >
-            <Phone className="h-4 w-4" />
-            <span className="hidden sm:inline">+40 732 083 657</span>
-            <span className="sm:hidden">Sună</span>
-          </a>
+          <div className="flex items-center gap-1 md:gap-4 shrink-0">
+            <nav className="hidden md:flex items-center gap-4 text-sm text-green-200">
+              <Link href="/tractari/despre" className="hover:text-white transition-colors">Despre</Link>
+              <Link href="/tractari/contact" className="hover:text-white transition-colors">Contact</Link>
+            </nav>
+            <a
+              href="tel:+40732083657"
+              style={{ backgroundColor: '#ffffff', color: '#14532d' }}
+              className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:opacity-90 shrink-0"
+            >
+              <Phone className="h-4 w-4" />
+              <span className="hidden sm:inline">+40 732 083 657</span>
+              <span className="sm:hidden">Sună</span>
+            </a>
+          </div>
         </div>
+        {/* Mobile nav strip — vizibil doar pe mobil */}
+        <nav
+          className="md:hidden flex items-center justify-center gap-6 py-2 border-t border-green-800 text-sm text-green-200"
+          style={{ backgroundColor: '#0f3d22' }}
+        >
+          <Link href="/tractari" className="hover:text-white transition-colors">Tarife</Link>
+          <Link href="/tractari/despre" className="hover:text-white transition-colors">Despre</Link>
+          <Link href="/tractari/contact" className="hover:text-white transition-colors">Contact</Link>
+        </nav>
       </header>
 
       {children}

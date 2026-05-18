@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Fuel, Settings, Gauge } from 'lucide-react'
+import { Fuel, Settings, Gauge, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/pricing'
 import type { Car } from '@/types/database'
@@ -12,8 +11,14 @@ interface CarCardProps {
 }
 
 export function CarCard({ car }: CarCardProps) {
-  return (
-    <Card className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
+  const inner = (
+    <Card
+      className={`overflow-hidden flex flex-col h-full transition-all duration-200 ${
+        car.available
+          ? 'hover:shadow-lg hover:-translate-y-1 cursor-pointer group'
+          : 'opacity-75'
+      }`}
+    >
       <div className="relative aspect-[16/10] bg-slate-100">
         {car.image_url ? (
           <Image
@@ -75,19 +80,26 @@ export function CarCard({ car }: CarCardProps) {
         )}
       </CardContent>
 
-      <CardFooter className="p-4 pt-0 flex items-center justify-between">
-        <div>
+      <CardFooter className="p-4 pt-0 flex items-center justify-between border-t border-slate-100 mt-2 pt-4">
+        <div className="flex items-baseline gap-1">
           <span className="text-2xl font-bold">{formatCurrency(car.price_per_day)}</span>
-          <span className="text-muted-foreground text-sm"> / zi</span>
+          <span className="text-muted-foreground text-sm">/ zi</span>
         </div>
-        {car.available ? (
-          <Link href={`/masini/${car.id}`}>
-            <Button>Rezervă acum</Button>
-          </Link>
-        ) : (
-          <Button disabled>Indisponibilă</Button>
+        {car.available && (
+          <span className="flex items-center gap-1.5 text-sm font-medium text-primary transition-transform group-hover:translate-x-0.5">
+            Detalii
+            <ArrowRight className="h-4 w-4" />
+          </span>
         )}
       </CardFooter>
     </Card>
+  )
+
+  if (!car.available) return inner
+
+  return (
+    <Link href={`/masini/${car.id}`} className="block h-full">
+      {inner}
+    </Link>
   )
 }
