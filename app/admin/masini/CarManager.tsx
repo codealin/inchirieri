@@ -26,6 +26,7 @@ import {
 import type { Car } from '@/types/database'
 
 type CarImageEntry = { id: string; url: string; position: number }
+type PendingFile = { file: File; previewUrl: string }
 
 const EMPTY_FORM: CarFormData = {
   name: '',
@@ -55,9 +56,19 @@ export function CarManager({ initialCars }: CarManagerProps) {
   const [mainImageUrl, setMainImageUrl] = useState<string | null>(null)
   const [mainImageError, setMainImageError] = useState('')
   const [isMainPending, startMainTransition] = useTransition()
+  // Pending files (add mode only — upload pe submit)
+  const [pendingMain, setPendingMain] = useState<PendingFile | null>(null)
+  const [pendingSecondary, setPendingSecondary] = useState<PendingFile[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const mainInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+
+  function clearPending() {
+    if (pendingMain) URL.revokeObjectURL(pendingMain.previewUrl)
+    pendingSecondary.forEach((p) => URL.revokeObjectURL(p.previewUrl))
+    setPendingMain(null)
+    setPendingSecondary([])
+  }
 
   useEffect(() => {
     setCars(initialCars)
@@ -67,6 +78,11 @@ export function CarManager({ initialCars }: CarManagerProps) {
     setEditingCar(null)
     setForm(EMPTY_FORM)
     setFormError('')
+    setCarImages([])
+    setMainImageUrl(null)
+    setMainImageError('')
+    setUploadError('')
+    clearPending()
     setDialogOpen(true)
   }
 
@@ -87,6 +103,7 @@ export function CarManager({ initialCars }: CarManagerProps) {
     setUploadError('')
     setMainImageUrl(car.image_url ?? null)
     setMainImageError('')
+    clearPending()
     setDialogOpen(true)
     startImageTransition(async () => {
       const imgs = await getCarImages(car.id)
@@ -95,11 +112,19 @@ export function CarManager({ initialCars }: CarManagerProps) {
   }
 
   function handleMainImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!editingCar) return
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
     setMainImageError('')
+
+    // Add mode: tine fisierul local, upload pe submit
+    if (!editingCar) {
+      if (pendingMain) URL.revokeObjectURL(pendingMain.previewUrl)
+      setPendingMain({ file, previewUrl: URL.createObjectURL(file) })
+      return
+    }
+
+    // Edit mode: upload imediat
     startMainTransition(async () => {
       const fd = new FormData()
       fd.append('file', file)
@@ -114,7 +139,12 @@ export function CarManager({ initialCars }: CarManagerProps) {
   }
 
   function handleRemoveMainImage() {
-    if (!editingCar) return
+    // Add mode: scoate doar din pending
+    if (!editingCar) {
+      if (pendingMain) URL.revokeObjectURL(pendingMain.previewUrl)
+      setPendingMain(null)
+      return
+    }
     if (!confirm('Ștergi fotografia principală?')) return
     startMainTransition(async () => {
       await removeMainImage(editingCar.id)
@@ -124,11 +154,21 @@ export function CarManager({ initialCars }: CarManagerProps) {
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!editingCar) return
     const files = Array.from(e.target.files ?? [])
     if (!files.length) return
     e.target.value = ''
     setUploadError('')
+
+    // Add mode: tine fisierele local
+    if (!editingCar) {
+      setPendingSecondary((prev) => [
+        ...prev,
+        ...files.map((f) => ({ file: f, previewUrl: URL.createObjectURL(f) })),
+      ])
+      return
+    }
+
+    // Edit mode: upload imediat
     startImageTransition(async () => {
       for (const file of files) {
         const fd = new FormData()
@@ -147,6 +187,14 @@ export function CarManager({ initialCars }: CarManagerProps) {
     startImageTransition(async () => {
       await deleteCarImage(imageId)
       setCarImages((prev) => prev.filter((img) => img.id !== imageId))
+    })
+  }
+
+  function handleRemovePendingSecondary(index: number) {
+    setPendingSecondary((prev) => {
+      const item = prev[index]
+      if (item) URL.revokeObjectURL(item.previewUrl)
+      return prev.filter((_, i) => i !== index)
     })
   }
 
@@ -179,13 +227,42 @@ export function CarManager({ initialCars }: CarManagerProps) {
     }
 
     startTransition(async () => {
-      const result = editingCar
-        ? await updateCar(editingCar.id, form)
-        : await createCar(form)
+      if (editingCar) {
+        const result = await updateCar(editingCar.id, form)
+        if (result?.error) {
+          setFormError(result.error)
+          return
+        }
+      } else {
+        // Create + upload pozele in cascada
+        const result = await createCar(form)
+        if ('error' in result && result.error) {
+          setFormError(result.error)
+          return
+        }
+        const newId = (result as { id: string }).id
 
-      if (result?.error) {
-        setFormError(result.error)
-        return
+        if (pendingMain) {
+          const fd = new FormData()
+          fd.append('file', pendingMain.file)
+          const r = await uploadMainImage(newId, fd)
+          if ('error' in r) {
+            setFormError(`Mașina a fost creată, dar poza principală a eșuat: ${r.error}`)
+            return
+          }
+        }
+
+        for (const item of pendingSecondary) {
+          const fd = new FormData()
+          fd.append('file', item.file)
+          const r = await uploadCarImage(newId, fd)
+          if ('error' in r) {
+            setFormError(`Mașina și poza principală OK, dar o poză secundară a eșuat: ${r.error}`)
+            return
+          }
+        }
+
+        clearPending()
       }
 
       setDialogOpen(false)
@@ -355,40 +432,54 @@ export function CarManager({ initialCars }: CarManagerProps) {
               />
             </div>
 
-            {/* Notă pentru add mode */}
-            {!editingCar && (
-              <p className="text-sm text-muted-foreground bg-blue-50 border border-blue-200 rounded-lg p-3">
-                💡 După ce salvezi mașina, vei putea încărca fotografia principală și fotografiile suplimentare.
-              </p>
-            )}
+            {/* Main image — disponibil in ambele moduri */}
+            <div className="space-y-3 pt-3 border-t">
+              <Label className="flex items-center gap-1.5">
+                <Star className="h-4 w-4" />
+                Fotografie principală
+                <span className="text-xs font-normal text-muted-foreground">
+                  — apare pe card și pe pagina detaliu
+                </span>
+              </Label>
 
-            {/* Main image — only when editing */}
-            {editingCar && (
-              <div className="space-y-3 pt-3 border-t">
-                <Label className="flex items-center gap-1.5">
-                  <Star className="h-4 w-4" />
-                  Fotografie principală
-                  <span className="text-xs font-normal text-muted-foreground">
-                    — apare pe card și pe pagina detaliu
-                  </span>
-                </Label>
+              <input
+                ref={mainInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleMainImageChange}
+              />
 
-                <input
-                  ref={mainInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleMainImageChange}
-                />
-
-                {mainImageUrl ? (
+              {(() => {
+                const displayUrl = editingCar ? mainImageUrl : pendingMain?.previewUrl ?? null
+                if (!displayUrl) {
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => mainInputRef.current?.click()}
+                      disabled={isMainPending}
+                      className="w-full aspect-[16/10] border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-2 hover:bg-slate-50 text-slate-500 transition-colors disabled:opacity-50"
+                    >
+                      {isMainPending ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="h-6 w-6" />
+                          <span className="text-sm font-medium">Încarcă poza principală</span>
+                        </>
+                      )}
+                    </button>
+                  )
+                }
+                return (
                   <div className="relative w-full aspect-[16/10] rounded-lg overflow-hidden border group">
                     <Image
-                      src={mainImageUrl}
+                      src={displayUrl}
                       alt="Fotografie principală"
                       fill
                       className="object-contain p-2"
                       sizes="500px"
+                      unoptimized={!editingCar /* pending blob URL */}
                     />
                     {isMainPending && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -419,101 +510,105 @@ export function CarManager({ initialCars }: CarManagerProps) {
                       </Button>
                     </div>
                   </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => mainInputRef.current?.click()}
-                    disabled={isMainPending}
-                    className="w-full aspect-[16/10] border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-2 hover:bg-slate-50 text-slate-500 transition-colors disabled:opacity-50"
-                  >
-                    {isMainPending ? (
-                      <Loader2 className="h-6 w-6 animate-spin" />
-                    ) : (
-                      <>
-                        <Upload className="h-6 w-6" />
-                        <span className="text-sm font-medium">Încarcă poza principală</span>
-                      </>
-                    )}
-                  </button>
-                )}
+                )
+              })()}
 
-                {mainImageError && (
-                  <p className="text-xs text-red-600 bg-red-50 p-2 rounded">{mainImageError}</p>
-                )}
+              {mainImageError && (
+                <p className="text-xs text-red-600 bg-red-50 p-2 rounded">{mainImageError}</p>
+              )}
+            </div>
+
+            {/* Additional images — disponibile in ambele moduri */}
+            <div className="space-y-3 pt-3 border-t">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-1.5">
+                  <Images className="h-4 w-4" />
+                  Fotografii suplimentare
+                </Label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isImagePending}
+                  className="gap-1.5 text-xs"
+                >
+                  {isImagePending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Upload className="h-3.5 w-3.5" />
+                  )}
+                  {isImagePending ? 'Se încarcă...' : 'Încarcă poze'}
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
               </div>
-            )}
 
-            {/* Additional images — only when editing */}
-            {editingCar && (
-              <div className="space-y-3 pt-3 border-t">
-                <div className="flex items-center justify-between">
-                  <Label className="flex items-center gap-1.5">
-                    <Images className="h-4 w-4" />
-                    Fotografii suplimentare
-                  </Label>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isImagePending}
-                    className="gap-1.5 text-xs"
-                  >
-                    {isImagePending ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Upload className="h-3.5 w-3.5" />
-                    )}
-                    {isImagePending ? 'Se încarcă...' : 'Încarcă poze'}
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </div>
+              {carImages.length === 0 && pendingSecondary.length === 0 && !isImagePending && (
+                <p className="text-xs text-muted-foreground py-2 text-center border border-dashed rounded-lg">
+                  Nicio fotografie suplimentară. Apasă "Încarcă poze" pentru a adăuga.
+                </p>
+              )}
 
-                {carImages.length === 0 && !isImagePending && (
-                  <p className="text-xs text-muted-foreground py-2 text-center border border-dashed rounded-lg">
-                    Nicio fotografie suplimentară. Apasă "Încarcă poze" pentru a adăuga.
-                  </p>
-                )}
-
-                {carImages.length > 0 && (
-                  <div className="flex gap-2 flex-wrap">
-                    {carImages.map((img) => (
-                      <div
-                        key={img.id}
-                        className="relative group w-24 h-16 rounded-lg overflow-hidden border bg-slate-100 shrink-0"
+              {(carImages.length > 0 || pendingSecondary.length > 0) && (
+                <div className="flex gap-2 flex-wrap">
+                  {carImages.map((img) => (
+                    <div
+                      key={img.id}
+                      className="relative group w-24 h-16 rounded-lg overflow-hidden border bg-slate-100 shrink-0"
+                    >
+                      <Image
+                        src={img.url}
+                        alt="foto"
+                        fill
+                        className="object-cover"
+                        sizes="96px"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteImage(img.id)}
+                        disabled={isImagePending}
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                       >
-                        <Image
-                          src={img.url}
-                          alt="foto"
-                          fill
-                          className="object-cover"
-                          sizes="96px"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteImage(img.id)}
-                          disabled={isImagePending}
-                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                        >
-                          <X className="h-5 w-5 text-white" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                        <X className="h-5 w-5 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                  {pendingSecondary.map((item, i) => (
+                    <div
+                      key={`pending-${i}`}
+                      className="relative group w-24 h-16 rounded-lg overflow-hidden border bg-slate-100 shrink-0"
+                    >
+                      <Image
+                        src={item.previewUrl}
+                        alt="foto in asteptare"
+                        fill
+                        className="object-cover"
+                        sizes="96px"
+                        unoptimized
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePendingSecondary(i)}
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                      >
+                        <X className="h-5 w-5 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-                {uploadError && (
-                  <p className="text-xs text-red-600 bg-red-50 p-2 rounded">{uploadError}</p>
-                )}
-              </div>
-            )}
+              {uploadError && (
+                <p className="text-xs text-red-600 bg-red-50 p-2 rounded">{uploadError}</p>
+              )}
+            </div>
 
             <div className="flex items-center gap-2">
               <input

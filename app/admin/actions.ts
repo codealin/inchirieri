@@ -51,17 +51,22 @@ export interface CarFormData {
 
 export async function createCar(data: CarFormData) {
   const supabase = createSupabaseAdminClient()
-  const { error } = await supabase.from('cars').insert({
-    ...data,
-    engine: data.engine || null,
-    transmission: data.transmission || null,
-    fuel_type: data.fuel_type || null,
-    image_url: data.image_url || null,
-    description: data.description || null,
-  })
+  const { data: created, error } = await supabase
+    .from('cars')
+    .insert({
+      ...data,
+      engine: data.engine || null,
+      transmission: data.transmission || null,
+      fuel_type: data.fuel_type || null,
+      image_url: data.image_url || null,
+      description: data.description || null,
+    })
+    .select('id')
+    .single()
   if (error) return { error: error.message }
   revalidatePath('/admin/masini')
   revalidatePath('/')
+  return { id: created.id as string }
 }
 
 export async function updateCar(id: string, data: CarFormData) {
