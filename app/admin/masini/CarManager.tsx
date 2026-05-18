@@ -382,12 +382,12 @@ export function CarManager({ initialCars }: CarManagerProps) {
                 />
 
                 {mainImageUrl ? (
-                  <div className="relative w-full aspect-[16/10] rounded-lg overflow-hidden border bg-slate-100 group">
+                  <div className="relative w-full aspect-[16/10] rounded-lg overflow-hidden border group">
                     <Image
                       src={mainImageUrl}
                       alt="Fotografie principală"
                       fill
-                      className="object-cover"
+                      className="object-contain p-2"
                       sizes="500px"
                     />
                     {isMainPending && (

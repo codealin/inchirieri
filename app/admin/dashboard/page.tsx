@@ -6,6 +6,7 @@ import { ro } from 'date-fns/locale'
 import { AdminShell } from '@/components/admin/AdminShell'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { ConfirmFormButton } from '@/components/admin/ConfirmFormButton'
 import { createSupabaseAdminClient } from '@/lib/supabase'
 import { formatCurrency } from '@/lib/pricing'
 import {
@@ -178,11 +179,12 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                                 </Button>
                               </form>
                             )}
-                            <form action={remove}>
-                              <Button type="submit" size="sm" variant="destructive">
-                                Șterge
-                              </Button>
-                            </form>
+                            <ConfirmFormButton
+                              action={remove}
+                              message={`Ștergi rezervarea pentru ${r.customer_name} (${r.cars?.name ?? 'mașină necunoscută'})? Acțiune ireversibilă.`}
+                            >
+                              Șterge
+                            </ConfirmFormButton>
                           </div>
                         </td>
                       </tr>

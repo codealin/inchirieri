@@ -27,12 +27,12 @@ export function CarImageGallery({ images, carName }: CarImageGalleryProps) {
 
   return (
     <div className="mb-6">
-      <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-100">
+      <div className="relative aspect-[16/10] rounded-xl overflow-hidden">
         <Image
           src={images[selected]}
           alt={`${carName} - foto ${selected + 1}`}
           fill
-          className="object-cover"
+          className="object-contain p-3"
           priority
           sizes="(max-width: 1024px) 100vw, 50vw"
         />
@@ -55,7 +55,7 @@ export function CarImageGallery({ images, carName }: CarImageGalleryProps) {
                 src={img}
                 alt={`${carName} foto ${i + 1}`}
                 fill
-                className="object-cover"
+                className="object-contain"
                 sizes="80px"
               />
             </button>

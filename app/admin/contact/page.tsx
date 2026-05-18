@@ -6,6 +6,7 @@ import { ro } from 'date-fns/locale'
 import { AdminShell } from '@/components/admin/AdminShell'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { ConfirmFormButton } from '@/components/admin/ConfirmFormButton'
 import { createSupabaseAdminClient } from '@/lib/supabase'
 import { markContactResolved, deleteContactRequest } from '@/app/admin/actions'
 import type { ContactRequest } from '@/types/database'
@@ -119,11 +120,12 @@ export default async function ContactPage({ searchParams }: PageProps) {
                           </Button>
                         </form>
                       )}
-                      <form action={remove}>
-                        <Button type="submit" size="sm" variant="destructive">
-                          Șterge
-                        </Button>
-                      </form>
+                      <ConfirmFormButton
+                        action={remove}
+                        message={`Ștergi cererea de contact de la ${req.name}? Acțiune ireversibilă.`}
+                      >
+                        Șterge
+                      </ConfirmFormButton>
                     </div>
                   </div>
                 </div>
