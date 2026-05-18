@@ -1,8 +1,18 @@
 import { Resend } from 'resend'
 import { format } from 'date-fns'
 import { ro } from 'date-fns/locale'
+import { SITE_URL } from '@/lib/config'
 
 const FROM = 'Expert Doi Trans <onboarding@resend.dev>'
+
+function esc(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+}
 
 interface EmailData {
   customerName: string
@@ -36,25 +46,25 @@ function adminHtml(d: EmailData & { start: string; end: string }) {
         </tr>
         <tr>
           <td style="padding:28px 32px">
-            <p style="margin:0 0 20px;font-size:22px;font-weight:700;color:#111">🚗 ${d.carName}</p>
+            <p style="margin:0 0 20px;font-size:22px;font-weight:700;color:#111">🚗 ${esc(d.carName)}</p>
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:14px;width:140px">Client</td>
-                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:14px">${d.customerName}</td>
+                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:14px">${esc(d.customerName)}</td>
               </tr>
               <tr>
                 <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:14px">Telefon</td>
                 <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:14px">
-                  <a href="tel:${d.customerPhone}" style="color:#2563eb;text-decoration:none">${d.customerPhone}</a>
+                  <a href="tel:${esc(d.customerPhone)}" style="color:#2563eb;text-decoration:none">${esc(d.customerPhone)}</a>
                 </td>
               </tr>
               <tr>
                 <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:14px">Email</td>
-                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px">${d.customerEmail || '—'}</td>
+                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px">${d.customerEmail ? esc(d.customerEmail) : '—'}</td>
               </tr>
               <tr>
                 <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:14px">Perioadă</td>
-                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:14px">${d.start} → ${d.end}</td>
+                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:14px">${esc(d.start)} → ${esc(d.end)}</td>
               </tr>
               <tr>
                 <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:14px">Total estimat</td>
@@ -62,11 +72,11 @@ function adminHtml(d: EmailData & { start: string; end: string }) {
               </tr>
               ${d.notes ? `<tr>
                 <td style="padding:10px 0;color:#555;font-size:14px;vertical-align:top">Mențiuni</td>
-                <td style="padding:10px 0;font-size:14px;color:#444">${d.notes}</td>
+                <td style="padding:10px 0;font-size:14px;color:#444">${esc(d.notes)}</td>
               </tr>` : ''}
             </table>
             <div style="margin-top:28px;padding:16px;background:#eff6ff;border-radius:8px;border-left:4px solid #2563eb">
-              <p style="margin:0;font-size:13px;color:#1e40af">Intră în <a href="https://inchirieri.vercel.app/admin/dashboard" style="color:#2563eb;font-weight:600">panoul de admin</a> pentru a aproba sau respinge rezervarea.</p>
+              <p style="margin:0;font-size:13px;color:#1e40af">Intră în <a href="${SITE_URL}/admin/dashboard" style="color:#2563eb;font-weight:600">panoul de admin</a> pentru a aproba sau respinge rezervarea.</p>
             </div>
           </td>
         </tr>
@@ -98,12 +108,12 @@ function customerHtml(d: { customerName: string; carName: string; start: string;
         </tr>
         <tr>
           <td style="padding:32px">
-            <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111">Mulțumim, ${d.customerName}!</p>
+            <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111">Mulțumim, ${esc(d.customerName)}!</p>
             <p style="margin:0 0 24px;color:#555;font-size:15px;line-height:1.6">Cererea ta de rezervare a fost primită. Te vom contacta telefonic în cel mai scurt timp pentru confirmare.</p>
 
             <div style="background:#f8fafc;border-radius:10px;padding:20px;margin-bottom:24px">
-              <p style="margin:0 0 12px;font-weight:700;font-size:15px;color:#111">${d.carName}</p>
-              <p style="margin:0 0 6px;font-size:14px;color:#555">📅 ${d.start} → ${d.end}</p>
+              <p style="margin:0 0 12px;font-weight:700;font-size:15px;color:#111">${esc(d.carName)}</p>
+              <p style="margin:0 0 6px;font-size:14px;color:#555">📅 ${esc(d.start)} → ${esc(d.end)}</p>
               <p style="margin:0;font-size:15px;font-weight:700;color:#2563eb">${d.totalPrice} RON <span style="font-size:13px;font-weight:400;color:#888">(estimat, se confirmă la ridicare)</span></p>
             </div>
 
@@ -117,7 +127,7 @@ function customerHtml(d: { customerName: string; carName: string; start: string;
         </tr>
         <tr>
           <td style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e5e7eb">
-            <p style="margin:0;font-size:12px;color:#9ca3af">Expert Doi Trans · Alba Iulia, Micești · inchirieri.vercel.app</p>
+            <p style="margin:0;font-size:12px;color:#9ca3af">Expert Doi Trans · Alba Iulia, Micești · ${SITE_URL.replace('https://', '')}</p>
           </td>
         </tr>
       </table>
@@ -154,25 +164,25 @@ function contactHtml(d: ContactEmailData) {
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:14px;width:140px">Nume</td>
-                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:14px">${d.name}</td>
+                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:14px">${esc(d.name)}</td>
               </tr>
               <tr>
                 <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:14px">Telefon</td>
                 <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:14px">
-                  <a href="tel:${d.phone}" style="color:#16a34a;text-decoration:none">${d.phone}</a>
+                  <a href="tel:${esc(d.phone)}" style="color:#16a34a;text-decoration:none">${esc(d.phone)}</a>
                 </td>
               </tr>
               ${d.email ? `<tr>
                 <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:14px">Email</td>
-                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px">${d.email}</td>
+                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px">${esc(d.email)}</td>
               </tr>` : ''}
               <tr>
                 <td style="padding:10px 0;color:#555;font-size:14px;vertical-align:top">Mesaj</td>
-                <td style="padding:10px 0;font-size:14px;color:#444;line-height:1.6">${d.message.replace(/\n/g, '<br>')}</td>
+                <td style="padding:10px 0;font-size:14px;color:#444;line-height:1.6">${esc(d.message).replace(/\n/g, '<br>')}</td>
               </tr>
             </table>
             <div style="margin-top:28px;padding:16px;background:#f0fdf4;border-radius:8px;border-left:4px solid #16a34a">
-              <p style="margin:0;font-size:13px;color:#166534">Intră în <a href="https://inchirieri.vercel.app/admin/contact" style="color:#16a34a;font-weight:600">panoul de admin</a> pentru a vedea și marca cererea ca rezolvată.</p>
+              <p style="margin:0;font-size:13px;color:#166534">Intră în <a href="${SITE_URL}/admin/contact" style="color:#16a34a;font-weight:600">panoul de admin</a> pentru a vedea și marca cererea ca rezolvată.</p>
             </div>
           </td>
         </tr>

@@ -116,18 +116,13 @@ export async function uploadMainImage(carId: string, formData: FormData) {
     const file = formData.get('file') as File
     if (!file || file.size === 0) return { error: 'Fișier invalid.' }
 
-    console.log('[uploadMainImage] carId:', carId, 'file:', file.name, file.size, file.type)
-
     const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
     const path = `cars/${carId}/main-${Date.now()}.${ext}`
 
     const { error: uploadError } = await supabase.storage
       .from('cars')
       .upload(path, file, { contentType: file.type || 'image/jpeg' })
-    if (uploadError) {
-      console.error('[uploadMainImage] storage error:', uploadError)
-      return { error: uploadError.message }
-    }
+    if (uploadError) return { error: uploadError.message }
 
     const { data: urlData } = supabase.storage.from('cars').getPublicUrl(path)
     const publicUrl = urlData?.publicUrl
@@ -143,10 +138,7 @@ export async function uploadMainImage(carId: string, formData: FormData) {
       .from('cars')
       .update({ image_url: publicUrl })
       .eq('id', carId)
-    if (dbError) {
-      console.error('[uploadMainImage] db error:', dbError)
-      return { error: dbError.message }
-    }
+    if (dbError) return { error: dbError.message }
 
     await deleteFromStorage(supabase, oldCar?.image_url ?? null)
 
@@ -215,18 +207,13 @@ export async function uploadCarImage(carId: string, formData: FormData) {
     const file = formData.get('file') as File
     if (!file || file.size === 0) return { error: 'Fișier invalid.' }
 
-    console.log('[uploadCarImage] carId:', carId, 'file:', file.name, file.size, file.type)
-
     const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
     const path = `cars/${carId}/${Date.now()}.${ext}`
 
     const { error: uploadError } = await supabase.storage
       .from('cars')
       .upload(path, file, { contentType: file.type || 'image/jpeg' })
-    if (uploadError) {
-      console.error('[uploadCarImage] storage error:', uploadError)
-      return { error: uploadError.message }
-    }
+    if (uploadError) return { error: uploadError.message }
 
     const { data: urlData } = supabase.storage.from('cars').getPublicUrl(path)
     const publicUrl = urlData?.publicUrl
@@ -246,10 +233,7 @@ export async function uploadCarImage(carId: string, formData: FormData) {
       .insert({ car_id: carId, url: publicUrl, position })
       .select()
       .single()
-    if (dbError) {
-      console.error('[uploadCarImage] db error:', dbError)
-      return { error: dbError.message }
-    }
+    if (dbError) return { error: dbError.message }
 
     revalidatePath('/')
     return data as { id: string; url: string; position: number }

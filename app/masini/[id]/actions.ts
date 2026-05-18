@@ -9,7 +9,6 @@ interface ReservationData {
   carId: string
   startDate: string
   endDate: string
-  pricePerDay: number
   customerName: string
   customerPhone: string
   customerEmail: string
@@ -19,13 +18,24 @@ interface ReservationData {
 export async function submitReservation(
   data: ReservationData
 ): Promise<{ error: string } | undefined> {
-  const { carId, startDate, endDate, pricePerDay, customerName, customerPhone, customerEmail, notes } = data
+  const { carId, startDate, endDate, customerName, customerPhone, customerEmail, notes } = data
 
   if (!customerName.trim() || !customerPhone.trim()) {
     return { error: 'Numele și telefonul sunt obligatorii.' }
   }
 
   const supabase = createSupabaseAdminClient()
+
+  // Fetch car server-side — pricePerDay nu vine de la client
+  const { data: car } = await supabase
+    .from('cars')
+    .select('price_per_day, name')
+    .eq('id', carId)
+    .single()
+
+  if (!car) {
+    return { error: 'Mașina nu a fost găsită.' }
+  }
 
   // Check for overlapping approved/pending reservations
   const { data: conflicts } = await supabase
@@ -43,7 +53,7 @@ export async function submitReservation(
   const totalPrice = calculateTotalPrice(
     new Date(startDate),
     new Date(endDate),
-    pricePerDay
+    car.price_per_day
   )
 
   const { error } = await supabase.from('reservations').insert({
@@ -62,14 +72,12 @@ export async function submitReservation(
     return { error: 'Eroare la salvarea rezervării. Încearcă din nou sau sună-ne direct.' }
   }
 
-  // Fetch car name for the email (non-blocking — if it fails, we still redirect)
   try {
-    const { data: car } = await supabase.from('cars').select('name').eq('id', carId).single()
     await sendReservationEmails({
       customerName: customerName.trim(),
       customerPhone: customerPhone.trim(),
       customerEmail: customerEmail.trim(),
-      carName: car?.name ?? 'Mașină',
+      carName: car.name,
       startDate,
       endDate,
       totalPrice,

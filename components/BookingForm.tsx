@@ -62,7 +62,6 @@ export function BookingForm({ car, bookedRanges }: BookingFormProps) {
       carId: car.id,
       startDate: format(range.from, 'yyyy-MM-dd'),
       endDate: format(range.to, 'yyyy-MM-dd'),
-      pricePerDay: car.price_per_day,
       customerName: (form.elements.namedItem('customerName') as HTMLInputElement).value,
       customerPhone: (form.elements.namedItem('customerPhone') as HTMLInputElement).value,
       customerEmail: (form.elements.namedItem('customerEmail') as HTMLInputElement).value,
