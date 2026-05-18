@@ -102,7 +102,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 <tr className="border-b bg-slate-50">
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Mașină</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Client</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Telefon</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Contact</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Perioada</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Zile</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Total</th>
@@ -127,14 +127,29 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                     return (
                       <tr key={r.id} className="border-b last:border-0 hover:bg-slate-50">
                         <td className="px-4 py-3 font-medium">{r.cars?.name ?? '—'}</td>
-                        <td className="px-4 py-3">{r.customer_name}</td>
+                        <td className="px-4 py-3">
+                          <div>{r.customer_name}</div>
+                          {r.notes && (
+                            <div className="text-xs text-amber-700 bg-amber-50 rounded px-1.5 py-0.5 mt-1 max-w-[160px] truncate" title={r.notes}>
+                              ✎ {r.notes}
+                            </div>
+                          )}
+                        </td>
                         <td className="px-4 py-3">
                           <a
                             href={`tel:${r.customer_phone}`}
-                            className="text-primary hover:underline"
+                            className="text-primary hover:underline block"
                           >
                             {r.customer_phone}
                           </a>
+                          {r.customer_email && (
+                            <a
+                              href={`mailto:${r.customer_email}`}
+                              className="text-xs text-muted-foreground hover:underline block mt-0.5"
+                            >
+                              {r.customer_email}
+                            </a>
+                          )}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {format(start, 'd MMM', { locale: ro })} →{' '}
