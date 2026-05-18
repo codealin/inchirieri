@@ -97,15 +97,17 @@ export default async function HomePage() {
             Rezervare simplă, plată la ridicare.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="#masini">
-              <Button size="lg" className="w-full sm:w-auto text-base px-8">
-                Vezi mașinile disponibile
-              </Button>
+            <a
+              href="#masini"
+              style={{ backgroundColor: '#2563eb', color: '#fff', border: '1px solid transparent' }}
+              className="inline-flex items-center justify-center w-full sm:w-[260px] text-base font-medium px-8 py-3 rounded-lg transition-transform hover:scale-[1.03]"
+            >
+              Vezi mașinile disponibile
             </a>
             <a
               href="tel:+40732083657"
               style={{ border: '1px solid rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'transparent' }}
-              className="inline-flex items-center justify-center w-full sm:w-auto text-base font-medium px-8 py-3 rounded-lg transition-colors hover:bg-white/10"
+              className="inline-flex items-center justify-center w-full sm:w-[260px] text-base font-medium px-8 py-3 rounded-lg transition-transform hover:scale-[1.03] hover:bg-white/10"
             >
               <Phone className="h-4 w-4 mr-2" />
               +40 732 083 657
