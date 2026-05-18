@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import Link from 'next/link'
 import { format } from 'date-fns'
 import { ro } from 'date-fns/locale'
 import { AdminShell } from '@/components/admin/AdminShell'
@@ -9,33 +10,67 @@ import { createSupabaseAdminClient } from '@/lib/supabase'
 import { markContactResolved, deleteContactRequest } from '@/app/admin/actions'
 import type { ContactRequest } from '@/types/database'
 
-export default async function ContactPage() {
-  const supabase = createSupabaseAdminClient()
-  const { data } = await supabase
-    .from('contact_requests')
-    .select('*')
-    .order('created_at', { ascending: false })
+interface PageProps {
+  searchParams: Promise<{ tab?: string }>
+}
 
-  const requests: ContactRequest[] = data ?? []
-  const unresolvedCount = requests.filter((r) => !r.resolved).length
+export default async function ContactPage({ searchParams }: PageProps) {
+  const { tab } = await searchParams
+  const activeTab = tab === 'rezolvate' ? 'rezolvate' : 'nerezolvate'
+
+  const supabase = createSupabaseAdminClient()
+
+  const [{ data: unresolved }, { data: resolved }] = await Promise.all([
+    supabase
+      .from('contact_requests')
+      .select('*')
+      .eq('resolved', false)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('contact_requests')
+      .select('*')
+      .eq('resolved', true)
+      .order('created_at', { ascending: false }),
+  ])
+
+  const unresolvedList: ContactRequest[] = unresolved ?? []
+  const resolvedList: ContactRequest[] = resolved ?? []
+  const requests = activeTab === 'nerezolvate' ? unresolvedList : resolvedList
+
+  const tabs = [
+    { label: 'Nerezolvate', value: 'nerezolvate', count: unresolvedList.length },
+    { label: 'Rezolvate', value: 'rezolvate', count: resolvedList.length },
+  ]
 
   return (
     <AdminShell activeSection="contact">
       <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">Formulare contact</h1>
-            {unresolvedCount > 0 && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {unresolvedCount} nerezolvate
-              </p>
-            )}
-          </div>
+        <h1 className="text-2xl font-bold mb-6">Formulare contact</h1>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6 border-b pb-0">
+          {tabs.map((t) => (
+            <Link
+              key={t.value}
+              href={`/admin/contact?tab=${t.value}`}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                activeTab === t.value
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t.label}
+              <span className="ml-1.5 text-xs bg-muted px-1.5 py-0.5 rounded-full">
+                {t.count}
+              </span>
+            </Link>
+          ))}
         </div>
 
+        {/* List */}
         {requests.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
-            Nu există formulare de contact trimise.
+            Nu există formulare {activeTab === 'nerezolvate' ? 'nerezolvate' : 'rezolvate'}.
           </div>
         ) : (
           <div className="space-y-4">
@@ -62,17 +97,11 @@ export default async function ContactPage() {
                         </span>
                       </div>
                       <div className="flex gap-4 text-sm text-muted-foreground mb-3 flex-wrap">
-                        <a
-                          href={`tel:${req.phone}`}
-                          className="text-primary hover:underline font-medium"
-                        >
+                        <a href={`tel:${req.phone}`} className="text-primary hover:underline font-medium">
                           {req.phone}
                         </a>
                         {req.email && (
-                          <a
-                            href={`mailto:${req.email}`}
-                            className="hover:underline"
-                          >
+                          <a href={`mailto:${req.email}`} className="hover:underline">
                             {req.email}
                           </a>
                         )}

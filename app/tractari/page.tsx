@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Phone, Truck, AlertTriangle, Package } from 'lucide-react'
 import { ContactForm } from '@/components/ContactForm'
 import { WhatsAppButton } from '@/components/WhatsAppButton'
+import { PriceSimulator } from '@/components/PriceSimulator'
 
 export const metadata: Metadata = {
   title: 'Tractări Auto Alba Iulia',
@@ -146,8 +147,19 @@ export default function TractariPage() {
         </div>
       </section>
 
+      {/* Simulator pret */}
+      <section className="py-16 px-4">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-3xl font-bold mb-2 text-center">Calculează prețul</h2>
+          <p className="text-muted-foreground text-center mb-10">
+            Introdu distanța și tipul vehiculului pentru o estimare rapidă.
+          </p>
+          <PriceSimulator />
+        </div>
+      </section>
+
       {/* Contact form */}
-      <section id="contact" className="py-16 px-4">
+      <section id="contact" className="py-16 px-4 bg-slate-50">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl font-bold mb-2 text-center">Contactează-ne</h2>
           <p className="text-muted-foreground text-center mb-10">
