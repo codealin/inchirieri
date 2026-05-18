@@ -8,8 +8,13 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
         <div className="flex items-center gap-4 min-w-0">
-          <Link href="/" className="flex items-center gap-2 min-w-0">
-            <span className="text-xl font-bold tracking-tight truncate">Expert Doi Trans</span>
+          <Link href="/" className="flex items-center gap-2 min-w-0 shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-inchirieri.png"
+              alt="Expert Doi Trans"
+              className="h-10 w-auto"
+            />
             <span
               className="text-xs font-bold px-2 py-0.5 rounded-full shrink-0"
               style={{ backgroundColor: '#2563eb', color: '#fff' }}

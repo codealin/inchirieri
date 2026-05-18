@@ -27,7 +27,12 @@ export default function TractariLayout({ children }: { children: React.ReactNode
             </Link>
             <span className="text-green-700 text-sm">|</span>
             <Link href="/tractari" className="flex items-center gap-2 min-w-0">
-              <span className="font-bold tracking-tight text-white truncate">Expert Doi Trans</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo-tractari.png"
+                alt="Expert Doi Trans - Tractări"
+                className="h-10 w-auto"
+              />
               <span
                 className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0"
                 style={{ backgroundColor: '#16a34a', color: '#fff' }}
