@@ -28,7 +28,6 @@ export async function submitContactForm(
     phone,
     email,
     message,
-    resolved: false,
   })
 
   if (error) {
