@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Phone, CheckCircle2, Star, MapPin, Navigation } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Navbar } from '@/components/Navbar'
-import { CarCard } from '@/components/CarCard'
+import { CarGrid } from '@/components/CarGrid'
 import { WhatsAppButton } from '@/components/WhatsAppButton'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { SITE_URL, BUSINESS } from '@/lib/config'
@@ -153,11 +153,7 @@ export default async function HomePage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {cars.map((car) => (
-                <CarCard key={car.id} car={car} />
-              ))}
-            </div>
+            <CarGrid cars={cars} />
           )}
         </div>
       </section>
