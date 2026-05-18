@@ -142,6 +142,7 @@ interface ContactEmailData {
   phone: string
   email: string
   message: string
+  type?: 'tractari' | 'inchirieri'
 }
 
 function contactHtml(d: ContactEmailData) {
@@ -204,10 +205,12 @@ export async function sendContactEmail(data: ContactEmailData) {
   if (!apiKey || !adminEmail) return
 
   const resend = new Resend(apiKey)
+  const emoji = data.type === 'inchirieri' ? '🚗' : '🚛'
+  const label = data.type === 'inchirieri' ? 'Cerere contact închirieri' : 'Cerere tractare'
   await resend.emails.send({
     from: FROM,
     to: adminEmail,
-    subject: `🚛 Cerere tractare: ${data.name} — ${data.phone}`,
+    subject: `${emoji} ${label}: ${data.name} — ${data.phone}`,
     html: contactHtml(data),
   })
 }

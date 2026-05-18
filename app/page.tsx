@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Phone, CheckCircle2, Star, MapPin, Navigation } from 'lucide-react'
+import { Phone, CheckCircle2, Star, MapPin, Navigation, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Navbar } from '@/components/Navbar'
 import { CarGrid } from '@/components/CarGrid'
 import { WhatsAppButton } from '@/components/WhatsAppButton'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { SITE_URL, BUSINESS } from '@/lib/config'
+import { ContactForm } from '@/components/ContactForm'
 import type { Car } from '@/types/database'
 
 export const metadata: Metadata = {
@@ -254,6 +255,53 @@ export default async function HomePage() {
                 referrerPolicy="no-referrer-when-downgrade"
                 title="Locație Expert Doi Trans"
               />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact */}
+      <section className="py-16 px-4 bg-slate-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Contactează-ne</h2>
+              <p className="text-muted-foreground mb-8">
+                Ai întrebări despre disponibilitate, prețuri sau condițiile de închiriere? Scrie-ne
+                sau sună direct.
+              </p>
+              <div className="space-y-4">
+                <a
+                  href="tel:+40732083657"
+                  className="flex items-center gap-4 p-4 bg-white border rounded-xl hover:border-blue-300 transition-colors group"
+                >
+                  <div className="h-11 w-11 rounded-full bg-blue-50 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
+                    <Phone className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">Telefon</p>
+                    <p className="text-blue-600 font-medium">+40 732 083 657</p>
+                  </div>
+                </a>
+                <a
+                  href={BUSINESS.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 p-4 bg-white border rounded-xl hover:border-green-300 transition-colors group"
+                >
+                  <div className="h-11 w-11 rounded-full bg-green-50 flex items-center justify-center shrink-0 group-hover:bg-green-100 transition-colors">
+                    <MessageCircle className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">WhatsApp</p>
+                    <p className="text-green-600 font-medium">Trimite mesaj</p>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <div className="bg-white border rounded-xl p-6 shadow-sm">
+              <h3 className="font-semibold mb-4">Trimite un mesaj</h3>
+              <ContactForm type="inchirieri" />
             </div>
           </div>
         </div>

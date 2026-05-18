@@ -1,13 +1,34 @@
 import Link from 'next/link'
 import { LayoutDashboard, Car, MessageSquare } from 'lucide-react'
 import { SignOutButton } from './SignOutButton'
+import { createSupabaseAdminClient } from '@/lib/supabase'
 
 interface AdminShellProps {
   children: React.ReactNode
   activeSection?: 'dashboard' | 'masini' | 'contact'
 }
 
-export function AdminShell({ children, activeSection }: AdminShellProps) {
+async function getCounts() {
+  const supabase = createSupabaseAdminClient()
+  const [pending, unresolved] = await Promise.all([
+    supabase
+      .from('reservations')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending'),
+    supabase
+      .from('contact_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('resolved', false),
+  ])
+  return {
+    pendingReservations: pending.count ?? 0,
+    unresolvedContacts: unresolved.count ?? 0,
+  }
+}
+
+export async function AdminShell({ children, activeSection }: AdminShellProps) {
+  const { pendingReservations, unresolvedContacts } = await getCounts()
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
@@ -27,7 +48,12 @@ export function AdminShell({ children, activeSection }: AdminShellProps) {
             }`}
           >
             <LayoutDashboard className="h-4 w-4" />
-            Rezervări
+            <span className="flex-1">Rezervări</span>
+            {pendingReservations > 0 && (
+              <span className="bg-blue-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                {pendingReservations}
+              </span>
+            )}
           </Link>
           <Link
             href="/admin/masini"
@@ -49,7 +75,12 @@ export function AdminShell({ children, activeSection }: AdminShellProps) {
             }`}
           >
             <MessageSquare className="h-4 w-4" />
-            Formulare contact
+            <span className="flex-1">Formulare contact</span>
+            {unresolvedContacts > 0 && (
+              <span className="bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                {unresolvedContacts}
+              </span>
+            )}
           </Link>
         </nav>
 

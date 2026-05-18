@@ -22,12 +22,15 @@ export async function submitContactForm(
     return { error: 'Completează toate câmpurile obligatorii.' }
   }
 
+  const type = (formData.get('type') as string) === 'inchirieri' ? 'inchirieri' : 'tractari'
+
   const supabase = createSupabaseAdminClient()
   const { error } = await supabase.from('contact_requests').insert({
     name,
     phone,
     email,
     message,
+    type,
   })
 
   if (error) {
@@ -36,7 +39,7 @@ export async function submitContactForm(
   }
 
   try {
-    await sendContactEmail({ name, phone, email: email ?? '', message })
+    await sendContactEmail({ name, phone, email: email ?? '', message, type })
   } catch {
     // email failure nu blochează salvarea
   }

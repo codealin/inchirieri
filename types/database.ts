@@ -41,5 +41,6 @@ export interface ContactRequest {
   email: string | null
   message: string
   resolved: boolean
+  type: 'inchirieri' | 'tractari'
   created_at: string
 }

@@ -7,9 +7,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
+interface ContactFormProps {
+  type?: 'tractari' | 'inchirieri'
+}
+
 const initialState: ContactFormState = {}
 
-export function ContactForm() {
+export function ContactForm({ type = 'tractari' }: ContactFormProps) {
   const [state, action, pending] = useActionState(submitContactForm, initialState)
 
   if (state.success) {
@@ -28,8 +32,15 @@ export function ContactForm() {
     )
   }
 
+  const buttonStyle =
+    type === 'inchirieri'
+      ? { backgroundColor: '#2563eb', color: '#fff' }
+      : { backgroundColor: '#16a34a', color: '#fff' }
+
   return (
     <form action={action} className="space-y-4">
+      <input type="hidden" name="type" value={type} />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="name">
@@ -57,7 +68,11 @@ export function ContactForm() {
         <Textarea
           id="message"
           name="message"
-          placeholder="Descrie situația, locația, tipul mașinii..."
+          placeholder={
+            type === 'inchirieri'
+              ? 'Perioada dorită, mașina preferată, orice întrebare...'
+              : 'Descrie situația, locația, tipul mașinii...'
+          }
           rows={4}
           required
         />
@@ -69,12 +84,7 @@ export function ContactForm() {
         </p>
       )}
 
-      <Button
-        type="submit"
-        disabled={pending}
-        className="w-full"
-        style={{ backgroundColor: '#16a34a', color: '#fff' }}
-      >
+      <Button type="submit" disabled={pending} className="w-full" style={buttonStyle}>
         {pending ? 'Se trimite...' : 'Trimite mesajul'}
       </Button>
     </form>
