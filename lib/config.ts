@@ -31,7 +31,7 @@ export const TRACTARI_IMAGES = {
   platforma: '/platforma.png',
   tractari2: '/tractari2.png',
   tractari2Transparent: '/tractari2_transparent.png',
-  tractari3Transparent: '/tractari3_transparent.png',
+  tractari3Transparent: '/tractari3_transparent.webp',
 } as const
 
 // Comută aici poza afișată pe /tractari/despre.

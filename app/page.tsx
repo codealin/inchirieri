@@ -136,24 +136,29 @@ export default async function HomePage() {
       {/* Cars listing */}
       <section id="masini" className="py-16 px-4 flex-1">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold mb-2">Flota noastră</h2>
-          <p className="text-muted-foreground mb-10">
-            Alege mașina potrivită pentru tine și selectează intervalul de timp.
-          </p>
-
           {cars.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground">
-              <p className="text-lg">Nu există mașini disponibile momentan.</p>
-              <p className="mt-2">
-                Sunați la{' '}
-                <a href="tel:+40732083657" className="text-primary font-medium">
-                  +40 732 083 657
-                </a>{' '}
-                pentru mai multe informații.
+            <>
+              <h2 className="text-3xl font-bold mb-2">Flota noastră</h2>
+              <p className="text-muted-foreground mb-10">
+                Alege mașina potrivită pentru tine și selectează intervalul de timp.
               </p>
-            </div>
+              <div className="text-center py-20 text-muted-foreground">
+                <p className="text-lg">Nu există mașini disponibile momentan.</p>
+                <p className="mt-2">
+                  Sunați la{' '}
+                  <a href="tel:+40732083657" className="text-primary font-medium">
+                    +40 732 083 657
+                  </a>{' '}
+                  pentru mai multe informații.
+                </p>
+              </div>
+            </>
           ) : (
-            <CarGrid cars={cars} />
+            <CarGrid
+              cars={cars}
+              title="Flota noastră"
+              subtitle="Alege mașina potrivită pentru tine și selectează intervalul de timp."
+            />
           )}
         </div>
       </section>
