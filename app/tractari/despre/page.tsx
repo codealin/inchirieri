@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { Clock, BadgeCheck, Zap, Truck } from 'lucide-react'
-import { TRACTARI_STATS } from '@/lib/config'
+import { TRACTARI_STATS, TRACTARI_DESPRE_IMAGE } from '@/lib/config'
 
 export const metadata: Metadata = {
   title: 'Despre noi — Tractări Auto',
@@ -45,7 +45,7 @@ export default function DesprePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 shadow-sm">
               <Image
-                src="/platforma.png"
+                src={TRACTARI_DESPRE_IMAGE}
                 alt="Platformă tractări Expert Doi Trans"
                 fill
                 className="object-cover"

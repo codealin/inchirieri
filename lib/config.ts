@@ -24,3 +24,15 @@ export const TRACTARI_STATS = [
   { value: '52+', label: 'Clienți mulțumiți' },
   { value: '200+', label: 'Mașini tractate' },
 ] as const
+
+// Imagini disponibile pentru pagina Despre tractări.
+// Adaugă fișierul în /public/ și o intrare nouă aici.
+export const TRACTARI_IMAGES = {
+  platforma: '/platforma.png',
+  tractari2: '/tractari2.png',
+  tractari2Transparent: '/tractari2_transparent.png',
+} as const
+
+// Comută aici poza afișată pe /tractari/despre.
+// Opțiuni: TRACTARI_IMAGES.platforma | .tractari2 | .tractari2Transparent
+export const TRACTARI_DESPRE_IMAGE = TRACTARI_IMAGES.tractari2Transparent

@@ -19,13 +19,13 @@ export function CarCard({ car }: CarCardProps) {
           : 'opacity-75'
       }`}
     >
-      <div className={`relative aspect-[16/10] ${car.image_url ? '' : 'bg-slate-100'}`}>
+      <div className={`relative aspect-[16/9] ${car.image_url ? '' : 'bg-slate-100'}`}>
         {car.image_url ? (
           <Image
             src={car.image_url}
             alt={car.name}
             fill
-            className="object-contain p-2"
+            className="object-contain object-bottom"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
