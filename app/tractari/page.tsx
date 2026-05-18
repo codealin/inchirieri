@@ -35,11 +35,17 @@ export default function TractariPage() {
   return (
     <>
       {/* Hero */}
+      {/* Pune poza platformei la /public/platforma.jpg pentru fundal real */}
       <section
         className="relative py-28 px-4 text-white overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #14532d 0%, #166534 50%, #15803d 100%)' }}
+        style={{
+          backgroundImage: "linear-gradient(rgba(20,83,45,0.88), rgba(20,83,45,0.88)), url('/platforma.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundColor: '#14532d',
+        }}
       >
-        {/* decorative circles */}
+        {/* decorative circles — vizibile doar fara poza */}
         <div
           className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10"
           style={{ backgroundColor: '#16a34a' }}

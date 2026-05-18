@@ -13,9 +13,10 @@ export function Navbar() {
           </Link>
           <Link
             href="/tractari"
-            className="hidden sm:block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            Tractări auto
+            <span className="hidden sm:inline">Tractări auto</span>
+            <span className="sm:hidden">Tractări</span>
           </Link>
         </div>
 

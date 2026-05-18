@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Phone } from 'lucide-react'
+import { Phone, ArrowLeft } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: {
@@ -14,30 +14,33 @@ export default function TractariLayout({ children }: { children: React.ReactNode
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-green-800" style={{ backgroundColor: '#14532d' }}>
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/tractari" className="flex items-center gap-2">
-              <span className="text-xl font-bold tracking-tight text-white">Expert Doi Trans</span>
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Back link — always visible */}
+            <Link
+              href="/"
+              className="flex items-center gap-1 text-green-400 hover:text-green-200 transition-colors shrink-0"
+              title="Închirieri auto"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">Închirieri</span>
+            </Link>
+            <span className="text-green-700 text-sm">|</span>
+            <Link href="/tractari" className="flex items-center gap-2 min-w-0">
+              <span className="font-bold tracking-tight text-white truncate">Expert Doi Trans</span>
               <span
-                className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0"
                 style={{ backgroundColor: '#16a34a', color: '#fff' }}
               >
                 Tractări
               </span>
             </Link>
-            <span className="hidden md:block text-green-600 text-sm">|</span>
-            <Link
-              href="/"
-              className="hidden md:block text-green-400 hover:text-green-200 text-sm transition-colors"
-            >
-              Închirieri auto →
-            </Link>
           </div>
 
           <a
             href="tel:+40732083657"
-            style={{ backgroundColor: '#16a34a', color: '#fff' }}
-            className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg transition-colors hover:opacity-90"
+            style={{ backgroundColor: '#ffffff', color: '#14532d' }}
+            className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:opacity-90 shrink-0"
           >
             <Phone className="h-4 w-4" />
             <span className="hidden sm:inline">+40 732 083 657</span>
