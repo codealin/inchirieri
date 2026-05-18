@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Pencil, Trash2, Loader2, Upload, X, Images } from 'lucide-react'
+import { Plus, Pencil, Trash2, Loader2, Upload, X, Images, Star } from 'lucide-react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,6 +20,7 @@ import { formatCurrency } from '@/lib/pricing'
 import {
   createCar, updateCar, deleteCar,
   getCarImages, uploadCarImage, deleteCarImage,
+  uploadMainImage, removeMainImage,
   type CarFormData,
 } from '@/app/admin/actions'
 import type { Car } from '@/types/database'
@@ -51,7 +52,11 @@ export function CarManager({ initialCars }: CarManagerProps) {
   const [carImages, setCarImages] = useState<CarImageEntry[]>([])
   const [uploadError, setUploadError] = useState('')
   const [isImagePending, startImageTransition] = useTransition()
+  const [mainImageUrl, setMainImageUrl] = useState<string | null>(null)
+  const [mainImageError, setMainImageError] = useState('')
+  const [isMainPending, startMainTransition] = useTransition()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const mainInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -80,10 +85,41 @@ export function CarManager({ initialCars }: CarManagerProps) {
     setFormError('')
     setCarImages([])
     setUploadError('')
+    setMainImageUrl(car.image_url ?? null)
+    setMainImageError('')
     setDialogOpen(true)
     startImageTransition(async () => {
       const imgs = await getCarImages(car.id)
       setCarImages(imgs)
+    })
+  }
+
+  function handleMainImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!editingCar) return
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setMainImageError('')
+    startMainTransition(async () => {
+      const fd = new FormData()
+      fd.append('file', file)
+      const result = await uploadMainImage(editingCar.id, fd)
+      if ('error' in result) {
+        setMainImageError(result.error ?? 'Eroare la upload.')
+        return
+      }
+      setMainImageUrl(result.url)
+      setForm((prev) => ({ ...prev, image_url: result.url }))
+    })
+  }
+
+  function handleRemoveMainImage() {
+    if (!editingCar) return
+    if (!confirm('Ștergi fotografia principală?')) return
+    startMainTransition(async () => {
+      await removeMainImage(editingCar.id)
+      setMainImageUrl(null)
+      setForm((prev) => ({ ...prev, image_url: '' }))
     })
   }
 
@@ -308,17 +344,6 @@ export function CarManager({ initialCars }: CarManagerProps) {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="image_url">URL imagine</Label>
-              <Input
-                id="image_url"
-                name="image_url"
-                value={form.image_url}
-                onChange={handleFormChange}
-                placeholder="https://..."
-              />
-            </div>
-
-            <div className="space-y-1.5">
               <Label htmlFor="description">Descriere</Label>
               <Textarea
                 id="description"
@@ -329,6 +354,94 @@ export function CarManager({ initialCars }: CarManagerProps) {
                 rows={2}
               />
             </div>
+
+            {/* Notă pentru add mode */}
+            {!editingCar && (
+              <p className="text-sm text-muted-foreground bg-blue-50 border border-blue-200 rounded-lg p-3">
+                💡 După ce salvezi mașina, vei putea încărca fotografia principală și fotografiile suplimentare.
+              </p>
+            )}
+
+            {/* Main image — only when editing */}
+            {editingCar && (
+              <div className="space-y-3 pt-3 border-t">
+                <Label className="flex items-center gap-1.5">
+                  <Star className="h-4 w-4" />
+                  Fotografie principală
+                  <span className="text-xs font-normal text-muted-foreground">
+                    — apare pe card și pe pagina detaliu
+                  </span>
+                </Label>
+
+                <input
+                  ref={mainInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleMainImageChange}
+                />
+
+                {mainImageUrl ? (
+                  <div className="relative w-full aspect-[16/10] rounded-lg overflow-hidden border bg-slate-100 group">
+                    <Image
+                      src={mainImageUrl}
+                      alt="Fotografie principală"
+                      fill
+                      className="object-cover"
+                      sizes="500px"
+                    />
+                    {isMainPending && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-white" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => mainInputRef.current?.click()}
+                        disabled={isMainPending}
+                        className="gap-1.5 text-xs shadow"
+                      >
+                        <Upload className="h-3.5 w-3.5" />
+                        Înlocuiește
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        onClick={handleRemoveMainImage}
+                        disabled={isMainPending}
+                        className="shadow"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => mainInputRef.current?.click()}
+                    disabled={isMainPending}
+                    className="w-full aspect-[16/10] border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-2 hover:bg-slate-50 text-slate-500 transition-colors disabled:opacity-50"
+                  >
+                    {isMainPending ? (
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    ) : (
+                      <>
+                        <Upload className="h-6 w-6" />
+                        <span className="text-sm font-medium">Încarcă poza principală</span>
+                      </>
+                    )}
+                  </button>
+                )}
+
+                {mainImageError && (
+                  <p className="text-xs text-red-600 bg-red-50 p-2 rounded">{mainImageError}</p>
+                )}
+              </div>
+            )}
 
             {/* Additional images — only when editing */}
             {editingCar && (
