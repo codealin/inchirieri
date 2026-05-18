@@ -1,10 +1,10 @@
 import Link from 'next/link'
-import { LayoutDashboard, Car } from 'lucide-react'
+import { LayoutDashboard, Car, MessageSquare } from 'lucide-react'
 import { SignOutButton } from './SignOutButton'
 
 interface AdminShellProps {
   children: React.ReactNode
-  activeSection?: 'dashboard' | 'masini'
+  activeSection?: 'dashboard' | 'masini' | 'contact'
 }
 
 export function AdminShell({ children, activeSection }: AdminShellProps) {
@@ -39,6 +39,17 @@ export function AdminShell({ children, activeSection }: AdminShellProps) {
           >
             <Car className="h-4 w-4" />
             Mașini
+          </Link>
+          <Link
+            href="/admin/contact"
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
+              activeSection === 'contact'
+                ? 'bg-slate-700 text-white'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <MessageSquare className="h-4 w-4" />
+            Formulare contact
           </Link>
         </nav>
 

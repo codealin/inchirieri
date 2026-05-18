@@ -4,6 +4,7 @@ import { Phone, CheckCircle2, Star, MapPin, Navigation } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Navbar } from '@/components/Navbar'
 import { CarCard } from '@/components/CarCard'
+import { WhatsAppButton } from '@/components/WhatsAppButton'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { SITE_URL, BUSINESS } from '@/lib/config'
 import type { Car } from '@/types/database'
@@ -256,6 +257,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <WhatsAppButton />
 
       {/* Footer */}
       <footer className="bg-slate-900 text-slate-400 py-10 px-4 mt-auto">

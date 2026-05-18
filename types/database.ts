@@ -33,3 +33,13 @@ export interface Reservation {
   created_at: string
   cars?: Car
 }
+
+export interface ContactRequest {
+  id: string
+  name: string
+  phone: string
+  email: string | null
+  message: string
+  resolved: boolean
+  created_at: string
+}

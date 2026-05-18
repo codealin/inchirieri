@@ -156,6 +156,20 @@ export async function uploadCarImage(carId: string, formData: FormData) {
   return data as { id: string; url: string; position: number }
 }
 
+// ── Contact request actions ──────────────────────────────────────────────────
+
+export async function markContactResolved(id: string) {
+  const supabase = createSupabaseAdminClient()
+  await supabase.from('contact_requests').update({ resolved: true }).eq('id', id)
+  revalidatePath('/admin/contact')
+}
+
+export async function deleteContactRequest(id: string) {
+  const supabase = createSupabaseAdminClient()
+  await supabase.from('contact_requests').delete().eq('id', id)
+  revalidatePath('/admin/contact')
+}
+
 export async function deleteCarImage(imageId: string) {
   const supabase = createSupabaseAdminClient()
 

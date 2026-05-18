@@ -127,6 +127,81 @@ function customerHtml(d: { customerName: string; carName: string; start: string;
 </html>`
 }
 
+interface ContactEmailData {
+  name: string
+  phone: string
+  email: string
+  message: string
+}
+
+function contactHtml(d: ContactEmailData) {
+  return `<!DOCTYPE html>
+<html lang="ro">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 0">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+        <tr>
+          <td style="background:#14532d;padding:24px 32px">
+            <p style="margin:0;color:#fff;font-size:20px;font-weight:700">Expert Doi Trans</p>
+            <p style="margin:4px 0 0;color:#86efac;font-size:13px">Formular contact tractări</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 32px">
+            <p style="margin:0 0 20px;font-size:22px;font-weight:700;color:#111">🚛 Cerere nouă</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:14px;width:140px">Nume</td>
+                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:14px">${d.name}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:14px">Telefon</td>
+                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:14px">
+                  <a href="tel:${d.phone}" style="color:#16a34a;text-decoration:none">${d.phone}</a>
+                </td>
+              </tr>
+              ${d.email ? `<tr>
+                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;color:#555;font-size:14px">Email</td>
+                <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px">${d.email}</td>
+              </tr>` : ''}
+              <tr>
+                <td style="padding:10px 0;color:#555;font-size:14px;vertical-align:top">Mesaj</td>
+                <td style="padding:10px 0;font-size:14px;color:#444;line-height:1.6">${d.message.replace(/\n/g, '<br>')}</td>
+              </tr>
+            </table>
+            <div style="margin-top:28px;padding:16px;background:#f0fdf4;border-radius:8px;border-left:4px solid #16a34a">
+              <p style="margin:0;font-size:13px;color:#166534">Intră în <a href="https://inchirieri.vercel.app/admin/contact" style="color:#16a34a;font-weight:600">panoul de admin</a> pentru a vedea și marca cererea ca rezolvată.</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e5e7eb">
+            <p style="margin:0;font-size:12px;color:#9ca3af">Expert Doi Trans · Alba Iulia, Micești · +40 732 083 657</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
+export async function sendContactEmail(data: ContactEmailData) {
+  const apiKey = process.env.RESEND_API_KEY
+  const adminEmail = process.env.ADMIN_EMAIL
+  if (!apiKey || !adminEmail) return
+
+  const resend = new Resend(apiKey)
+  await resend.emails.send({
+    from: FROM,
+    to: adminEmail,
+    subject: `🚛 Cerere tractare: ${data.name} — ${data.phone}`,
+    html: contactHtml(data),
+  })
+}
+
 export async function sendReservationEmails(data: EmailData) {
   const apiKey = process.env.RESEND_API_KEY
   const adminEmail = process.env.ADMIN_EMAIL
