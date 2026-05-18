@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Phone, ArrowLeft } from 'lucide-react'
+import { Phone, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: {
@@ -15,18 +15,8 @@ export default function TractariLayout({ children }: { children: React.ReactNode
     <>
       <header className="sticky top-0 z-50 w-full border-b border-green-800" style={{ backgroundColor: '#14532d' }}>
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            {/* Back link — always visible */}
-            <Link
-              href="/"
-              className="flex items-center gap-1 text-green-400 hover:text-green-200 transition-colors shrink-0"
-              title="Închirieri auto"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline text-sm">Închirieri</span>
-            </Link>
-            <span className="text-green-700 text-sm">|</span>
-            <Link href="/tractari" className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-4 min-w-0">
+            <Link href="/tractari" className="flex items-center gap-2 min-w-0 shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/logo-tractari.png"
@@ -39,6 +29,14 @@ export default function TractariLayout({ children }: { children: React.ReactNode
               >
                 Tractări
               </span>
+            </Link>
+            <span className="text-green-700 text-sm hidden sm:inline">|</span>
+            <Link
+              href="/"
+              className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-green-200 hover:text-white transition-colors shrink-0 group"
+            >
+              Închirieri auto
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
 
@@ -63,7 +61,10 @@ export default function TractariLayout({ children }: { children: React.ReactNode
           className="md:hidden flex items-center justify-center gap-6 py-2 border-t border-green-800 text-sm text-green-200"
           style={{ backgroundColor: '#0f3d22' }}
         >
-          <Link href="/tractari" className="hover:text-white transition-colors">Tarife</Link>
+          <Link href="/" className="inline-flex items-center gap-1 hover:text-white transition-colors font-semibold">
+            Închirieri
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
           <Link href="/tractari/despre" className="hover:text-white transition-colors">Despre</Link>
           <Link href="/tractari/contact" className="hover:text-white transition-colors">Contact</Link>
         </nav>
