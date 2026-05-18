@@ -227,46 +227,58 @@ export function CarManager({ initialCars }: CarManagerProps) {
     }
 
     startTransition(async () => {
-      if (editingCar) {
-        const result = await updateCar(editingCar.id, form)
-        if (result?.error) {
-          setFormError(result.error)
-          return
-        }
-      } else {
-        // Create + upload pozele in cascada
-        const result = await createCar(form)
-        if ('error' in result && result.error) {
-          setFormError(result.error)
-          return
-        }
-        const newId = (result as { id: string }).id
-
-        if (pendingMain) {
-          const fd = new FormData()
-          fd.append('file', pendingMain.file)
-          const r = await uploadMainImage(newId, fd)
-          if ('error' in r) {
-            setFormError(`Mașina a fost creată, dar poza principală a eșuat: ${r.error}`)
+      try {
+        if (editingCar) {
+          const result = await updateCar(editingCar.id, form)
+          if (result?.error) {
+            setFormError(result.error)
             return
           }
-        }
-
-        for (const item of pendingSecondary) {
-          const fd = new FormData()
-          fd.append('file', item.file)
-          const r = await uploadCarImage(newId, fd)
-          if ('error' in r) {
-            setFormError(`Mașina și poza principală OK, dar o poză secundară a eșuat: ${r.error}`)
+        } else {
+          // Create + upload pozele in cascada
+          const result = await createCar(form)
+          if (!result || 'error' in result) {
+            setFormError((result as { error: string } | null)?.error ?? 'Eroare la crearea mașinii.')
             return
           }
+          const newId = result.id
+
+          if (pendingMain) {
+            const fd = new FormData()
+            fd.append('file', pendingMain.file)
+            const r = await uploadMainImage(newId, fd)
+            if (!r || 'error' in r) {
+              setFormError(`Mașina a fost creată, dar poza principală a eșuat: ${'error' in (r ?? {}) ? (r as { error: string }).error : 'eroare necunoscută'}`)
+              clearPending()
+              setDialogOpen(false)
+              router.refresh()
+              return
+            }
+          }
+
+          for (const item of pendingSecondary) {
+            const fd = new FormData()
+            fd.append('file', item.file)
+            const r = await uploadCarImage(newId, fd)
+            if (!r || 'error' in r) {
+              setFormError(`O poză secundară a eșuat: ${'error' in (r ?? {}) ? (r as { error: string }).error : 'eroare necunoscută'}`)
+              clearPending()
+              setDialogOpen(false)
+              router.refresh()
+              return
+            }
+          }
+
+          clearPending()
         }
 
-        clearPending()
+        setDialogOpen(false)
+        router.refresh()
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        setFormError(`Eroare neașteptată: ${msg}`)
+        console.error('[CarManager handleSubmit]', err)
       }
-
-      setDialogOpen(false)
-      router.refresh()
     })
   }
 
