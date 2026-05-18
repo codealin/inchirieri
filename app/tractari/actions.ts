@@ -31,7 +31,10 @@ export async function submitContactForm(
     resolved: false,
   })
 
-  if (error) return { error: 'A apărut o eroare. Încearcă din nou sau sună direct.' }
+  if (error) {
+    console.error('[contact_requests insert]', error.code, error.message, error.details)
+    return { error: `Eroare: ${error.message}` }
+  }
 
   try {
     await sendContactEmail({ name, phone, email: email ?? '', message })
