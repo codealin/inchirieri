@@ -111,39 +111,53 @@ async function deleteFromStorage(supabase: ReturnType<typeof createSupabaseAdmin
 }
 
 export async function uploadMainImage(carId: string, formData: FormData) {
-  const supabase = createSupabaseAdminClient()
-  const file = formData.get('file') as File
-  if (!file || file.size === 0) return { error: 'Fișier invalid.' }
+  try {
+    const supabase = createSupabaseAdminClient()
+    const file = formData.get('file') as File
+    if (!file || file.size === 0) return { error: 'Fișier invalid.' }
 
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
-  const path = `cars/${carId}/main-${Date.now()}.${ext}`
+    console.log('[uploadMainImage] carId:', carId, 'file:', file.name, file.size, file.type)
 
-  const { error: uploadError } = await supabase.storage
-    .from('cars')
-    .upload(path, file, { contentType: file.type })
-  if (uploadError) return { error: uploadError.message }
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+    const path = `cars/${carId}/main-${Date.now()}.${ext}`
 
-  const { data: { publicUrl } } = supabase.storage.from('cars').getPublicUrl(path)
+    const { error: uploadError } = await supabase.storage
+      .from('cars')
+      .upload(path, file, { contentType: file.type || 'image/jpeg' })
+    if (uploadError) {
+      console.error('[uploadMainImage] storage error:', uploadError)
+      return { error: uploadError.message }
+    }
 
-  // pastreaza poza veche pentru cleanup
-  const { data: oldCar } = await supabase
-    .from('cars')
-    .select('image_url')
-    .eq('id', carId)
-    .single()
+    const { data: urlData } = supabase.storage.from('cars').getPublicUrl(path)
+    const publicUrl = urlData?.publicUrl
+    if (!publicUrl) return { error: 'Nu s-a putut obține URL-ul public.' }
 
-  const { error: dbError } = await supabase
-    .from('cars')
-    .update({ image_url: publicUrl })
-    .eq('id', carId)
-  if (dbError) return { error: dbError.message }
+    const { data: oldCar } = await supabase
+      .from('cars')
+      .select('image_url')
+      .eq('id', carId)
+      .single()
 
-  await deleteFromStorage(supabase, oldCar?.image_url ?? null)
+    const { error: dbError } = await supabase
+      .from('cars')
+      .update({ image_url: publicUrl })
+      .eq('id', carId)
+    if (dbError) {
+      console.error('[uploadMainImage] db error:', dbError)
+      return { error: dbError.message }
+    }
 
-  revalidatePath('/')
-  revalidatePath('/admin/masini')
-  revalidatePath(`/masini/${carId}`)
-  return { url: publicUrl }
+    await deleteFromStorage(supabase, oldCar?.image_url ?? null)
+
+    revalidatePath('/')
+    revalidatePath('/admin/masini')
+    revalidatePath(`/masini/${carId}`)
+    return { url: publicUrl }
+  } catch (err) {
+    console.error('[uploadMainImage] uncaught:', err)
+    return { error: err instanceof Error ? err.message : String(err) }
+  }
 }
 
 export async function removeMainImage(carId: string) {
@@ -196,38 +210,53 @@ export async function addCarImage(carId: string, url: string) {
 }
 
 export async function uploadCarImage(carId: string, formData: FormData) {
-  const supabase = createSupabaseAdminClient()
-  const file = formData.get('file') as File
-  if (!file || file.size === 0) return { error: 'Fișier invalid.' }
+  try {
+    const supabase = createSupabaseAdminClient()
+    const file = formData.get('file') as File
+    if (!file || file.size === 0) return { error: 'Fișier invalid.' }
 
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
-  const path = `cars/${carId}/${Date.now()}.${ext}`
+    console.log('[uploadCarImage] carId:', carId, 'file:', file.name, file.size, file.type)
 
-  const { error: uploadError } = await supabase.storage
-    .from('cars')
-    .upload(path, file, { contentType: file.type })
-  if (uploadError) return { error: uploadError.message }
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+    const path = `cars/${carId}/${Date.now()}.${ext}`
 
-  const { data: { publicUrl } } = supabase.storage.from('cars').getPublicUrl(path)
+    const { error: uploadError } = await supabase.storage
+      .from('cars')
+      .upload(path, file, { contentType: file.type || 'image/jpeg' })
+    if (uploadError) {
+      console.error('[uploadCarImage] storage error:', uploadError)
+      return { error: uploadError.message }
+    }
 
-  const { data: last } = await supabase
-    .from('car_images')
-    .select('position')
-    .eq('car_id', carId)
-    .order('position', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  const position = (last?.position ?? -1) + 1
+    const { data: urlData } = supabase.storage.from('cars').getPublicUrl(path)
+    const publicUrl = urlData?.publicUrl
+    if (!publicUrl) return { error: 'Nu s-a putut obține URL-ul public.' }
 
-  const { data, error: dbError } = await supabase
-    .from('car_images')
-    .insert({ car_id: carId, url: publicUrl, position })
-    .select()
-    .single()
-  if (dbError) return { error: dbError.message }
+    const { data: last } = await supabase
+      .from('car_images')
+      .select('position')
+      .eq('car_id', carId)
+      .order('position', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const position = (last?.position ?? -1) + 1
 
-  revalidatePath('/')
-  return data as { id: string; url: string; position: number }
+    const { data, error: dbError } = await supabase
+      .from('car_images')
+      .insert({ car_id: carId, url: publicUrl, position })
+      .select()
+      .single()
+    if (dbError) {
+      console.error('[uploadCarImage] db error:', dbError)
+      return { error: dbError.message }
+    }
+
+    revalidatePath('/')
+    return data as { id: string; url: string; position: number }
+  } catch (err) {
+    console.error('[uploadCarImage] uncaught:', err)
+    return { error: err instanceof Error ? err.message : String(err) }
+  }
 }
 
 // ── Contact request actions ──────────────────────────────────────────────────

@@ -126,15 +126,19 @@ export function CarManager({ initialCars }: CarManagerProps) {
 
     // Edit mode: upload imediat
     startMainTransition(async () => {
-      const fd = new FormData()
-      fd.append('file', file)
-      const result = await uploadMainImage(editingCar.id, fd)
-      if ('error' in result) {
-        setMainImageError(result.error ?? 'Eroare la upload.')
-        return
+      try {
+        const fd = new FormData()
+        fd.append('file', file)
+        const result = await uploadMainImage(editingCar.id, fd)
+        if (!result || 'error' in result) {
+          setMainImageError((result as { error: string } | null)?.error ?? 'Eroare la upload.')
+          return
+        }
+        setMainImageUrl(result.url)
+        setForm((prev) => ({ ...prev, image_url: result.url }))
+      } catch (err) {
+        setMainImageError(err instanceof Error ? err.message : 'Eroare neașteptată la upload.')
       }
-      setMainImageUrl(result.url)
-      setForm((prev) => ({ ...prev, image_url: result.url }))
     })
   }
 
@@ -170,15 +174,19 @@ export function CarManager({ initialCars }: CarManagerProps) {
 
     // Edit mode: upload imediat
     startImageTransition(async () => {
-      for (const file of files) {
-        const fd = new FormData()
-        fd.append('file', file)
-        const result = await uploadCarImage(editingCar.id, fd)
-        if ('error' in result) {
-          setUploadError(result.error ?? 'Eroare la upload.')
-          return
+      try {
+        for (const file of files) {
+          const fd = new FormData()
+          fd.append('file', file)
+          const result = await uploadCarImage(editingCar.id, fd)
+          if (!result || 'error' in result) {
+            setUploadError((result as { error: string } | null)?.error ?? 'Eroare la upload.')
+            return
+          }
+          setCarImages((prev) => [...prev, result])
         }
-        setCarImages((prev) => [...prev, result])
+      } catch (err) {
+        setUploadError(err instanceof Error ? err.message : 'Eroare neașteptată la upload.')
       }
     })
   }
