@@ -13,7 +13,8 @@ export function Navbar() {
 
         <a
           href="tel:+40732083657"
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          style={{ backgroundColor: '#2563eb', color: '#fff' }}
+          className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg transition-colors hover:opacity-90"
         >
           <Phone className="h-4 w-4" />
           <span className="hidden sm:inline">+40 732 083 657</span>
