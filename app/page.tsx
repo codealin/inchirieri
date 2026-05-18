@@ -102,15 +102,13 @@ export default async function HomePage() {
                 Vezi mașinile disponibile
               </Button>
             </a>
-            <a href="tel:+40732083657">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full sm:w-auto text-base px-8 border-white/30 text-white hover:bg-white/10 hover:text-white"
-              >
-                <Phone className="h-4 w-4 mr-2" />
-                +40 732 083 657
-              </Button>
+            <a
+              href="tel:+40732083657"
+              style={{ border: '1px solid rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'transparent' }}
+              className="inline-flex items-center justify-center w-full sm:w-auto text-base font-medium px-8 py-3 rounded-lg transition-colors hover:bg-white/10"
+            >
+              <Phone className="h-4 w-4 mr-2" />
+              +40 732 083 657
             </a>
           </div>
         </div>
