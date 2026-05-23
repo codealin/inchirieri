@@ -317,56 +317,63 @@ export function CarManager({ initialCars }: CarManagerProps) {
           </Button>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-white">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-slate-50">
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Mașină</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Motor</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Transmisie</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Preț / zi</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Acțiuni</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cars.map((car) => (
-                <tr key={car.id} className="border-b last:border-0 hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium">{car.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{car.engine ?? '—'}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{car.transmission ?? '—'}</td>
-                  <td className="px-4 py-3 font-medium">{formatCurrency(car.price_per_day)}</td>
-                  <td className="px-4 py-3">
-                    <Badge variant={car.available ? 'default' : 'secondary'}>
-                      {car.available ? 'Disponibilă' : 'Indisponibilă'}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openEditDialog(car)}
-                        className="gap-1"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Editează
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(car)}
-                        className="gap-1"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Șterge
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-3">
+          {cars.map((car) => (
+            <div
+              key={car.id}
+              className="bg-white border rounded-xl p-4 flex items-center gap-3 shadow-sm"
+            >
+              {car.image_url ? (
+                <div className="relative w-16 h-12 rounded-lg overflow-hidden shrink-0 bg-slate-100">
+                  <Image
+                    src={car.image_url}
+                    alt={car.name}
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                  />
+                </div>
+              ) : (
+                <div className="w-16 h-12 rounded-lg shrink-0 bg-slate-100 flex items-center justify-center">
+                  <span className="text-slate-400 text-xs">—</span>
+                </div>
+              )}
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                  <span className="font-semibold text-sm truncate">{car.name}</span>
+                  <Badge variant={car.available ? 'default' : 'secondary'} className="shrink-0 text-xs">
+                    {car.available ? 'Disponibilă' : 'Indisponibilă'}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground truncate">
+                  {[car.engine, car.transmission].filter(Boolean).join(' · ') || '—'}
+                </p>
+                <p className="text-sm font-semibold mt-0.5">{formatCurrency(car.price_per_day)}/zi</p>
+              </div>
+
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => openEditDialog(car)}
+                  className="h-8 w-8 p-0"
+                  title="Editează"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => handleDelete(car)}
+                  className="h-8 w-8 p-0"
+                  title="Șterge"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

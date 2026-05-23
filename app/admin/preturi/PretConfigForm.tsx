@@ -7,10 +7,25 @@ import { calcBaseFee, calcTractariTotal } from '@/lib/tractari-pricing'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { ChevronRight, Star } from 'lucide-react'
 
 interface Props {
   config: TractariConfig
   vehicleTypes: VehicleType[]
+}
+
+interface TypeEditForm {
+  label: string
+  local_fee: string
+  per_km: string
+  highlight: boolean
 }
 
 export function PretConfigForm({ config, vehicleTypes }: Props) {
@@ -18,23 +33,74 @@ export function PretConfigForm({ config, vehicleTypes }: Props) {
   const [types, setTypes] = useState(
     [...vehicleTypes].sort((a, b) => a.position - b.position)
   )
+
+  // Vehicle type modal state
+  const [editingType, setEditingType] = useState<VehicleType | null>(null)
+  const [typeForm, setTypeForm] = useState<TypeEditForm>({
+    label: '',
+    local_fee: '',
+    per_km: '',
+    highlight: false,
+  })
+  const [typeSaved, setTypeSaved] = useState(false)
+  const [typeError, setTypeError] = useState<string | null>(null)
+  const [isTypePending, startTypeTransition] = useTransition()
+
+  // Global config state
   const [configSaved, setConfigSaved] = useState(false)
-  const [typesSaved, setTypesSaved] = useState(false)
   const [configError, setConfigError] = useState<string | null>(null)
-  const [typesError, setTypesError] = useState<string | null>(null)
   const [isConfigPending, startConfigTransition] = useTransition()
-  const [isTypesPending, startTypesTransition] = useTransition()
+
+  function openTypeModal(t: VehicleType) {
+    setEditingType(t)
+    setTypeForm({
+      label: t.label,
+      local_fee: String(t.local_fee),
+      per_km: String(t.per_km),
+      highlight: t.highlight,
+    })
+    setTypeSaved(false)
+    setTypeError(null)
+  }
+
+  function handleSaveType() {
+    if (!editingType) return
+    setTypeError(null)
+    setTypeSaved(false)
+    startTypeTransition(async () => {
+      const result = await updateVehicleTypes([
+        {
+          id: editingType.id,
+          label: typeForm.label,
+          local_fee: Number(typeForm.local_fee),
+          per_km: Number(typeForm.per_km),
+          highlight: typeForm.highlight,
+        },
+      ])
+      if (result?.error) {
+        setTypeError(result.error)
+      } else {
+        setTypes((prev) =>
+          prev.map((t) =>
+            t.id === editingType.id
+              ? {
+                  ...t,
+                  label: typeForm.label,
+                  local_fee: Number(typeForm.local_fee),
+                  per_km: Number(typeForm.per_km),
+                  highlight: typeForm.highlight,
+                }
+              : t
+          )
+        )
+        setTypeSaved(true)
+      }
+    })
+  }
 
   function setField(field: keyof TractariConfig, value: string | number) {
     setConfigSaved(false)
     setForm((prev) => ({ ...prev, [field]: value }))
-  }
-
-  function setTypeField(id: number, field: keyof VehicleType, value: string | number | boolean) {
-    setTypesSaved(false)
-    setTypes((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, [field]: value } : t))
-    )
   }
 
   function handleConfigSubmit(e: React.FormEvent) {
@@ -55,105 +121,44 @@ export function PretConfigForm({ config, vehicleTypes }: Props) {
     })
   }
 
-  function handleTypesSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setTypesError(null)
-    setTypesSaved(false)
-    startTypesTransition(async () => {
-      const result = await updateVehicleTypes(
-        types.map((t) => ({
-          id: t.id,
-          label: t.label,
-          local_fee: Number(t.local_fee),
-          per_km: Number(t.per_km),
-          highlight: t.highlight,
-        }))
-      )
-      if (result?.error) setTypesError(result.error)
-      else setTypesSaved(true)
-    })
-  }
-
   return (
     <div className="space-y-10">
-      {/* ── Tipuri vehicule ── */}
-      <form onSubmit={handleTypesSubmit} className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold">Tipuri vehicule</h2>
-            <p className="text-sm text-muted-foreground">Preț local și tarif/km pentru fiecare tip.</p>
-          </div>
+
+      {/* ── Tipuri vehicule – butoane cu modal ── */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold">Tipuri vehicule</h2>
+          <p className="text-sm text-muted-foreground">Apasă un tip pentru a edita prețurile.</p>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {types.map((t) => (
-            <div key={t.id} className="bg-white border rounded-xl p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <Input
-                  value={t.label}
-                  onChange={(e) => setTypeField(t.id, 'label', e.target.value)}
-                  className="font-semibold max-w-[200px]"
-                />
-                <label className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={t.highlight}
-                    onChange={(e) => setTypeField(t.id, 'highlight', e.target.checked)}
-                    className="rounded"
-                  />
-                  Cel mai solicitat
-                </label>
+            <button
+              key={t.id}
+              onClick={() => openTypeModal(t)}
+              className="w-full text-left bg-white border rounded-xl px-4 py-3.5 flex items-center gap-3 hover:border-slate-300 active:bg-slate-50 transition-colors shadow-sm"
+            >
+              {t.highlight && (
+                <Star className="h-4 w-4 text-amber-400 shrink-0" fill="currentColor" />
+              )}
+              {!t.highlight && <div className="w-4 shrink-0" />}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">{t.label}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Local: <span className="font-medium text-slate-700">{t.local_fee} RON</span>
+                  {' · '}
+                  Extraurban: <span className="font-medium text-slate-700">{t.per_km} RON/km</span>
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label>Preț local (RON)</Label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      step="1"
-                      min="0"
-                      value={t.local_fee}
-                      onChange={(e) => setTypeField(t.id, 'local_fee', e.target.value)}
-                      className="pr-14"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">RON</span>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Tarif extraurban (RON/km)</Label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      value={t.per_km}
-                      onChange={(e) => setTypeField(t.id, 'per_km', e.target.value)}
-                      className="pr-16"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">RON/km</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
+            </button>
           ))}
         </div>
-
-        {typesError && (
-          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">{typesError}</p>
-        )}
-        {typesSaved && (
-          <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
-            ✓ Tipurile de vehicule au fost salvate.
-          </p>
-        )}
-        <Button type="submit" disabled={isTypesPending} variant="default">
-          {isTypesPending ? 'Se salvează...' : 'Salvează tipuri vehicule'}
-        </Button>
-      </form>
+      </div>
 
       <hr />
 
-      {/* ── Config globală (taxă pornire, program) ── */}
+      {/* ── Config globală ── */}
       <form onSubmit={handleConfigSubmit} className="space-y-6">
         <div>
           <h2 className="text-lg font-semibold">Configurare globală</h2>
@@ -161,7 +166,7 @@ export function PretConfigForm({ config, vehicleTypes }: Props) {
         </div>
 
         {/* Taxă de pornire */}
-        <div className="bg-white border rounded-xl p-6 space-y-4">
+        <div className="bg-white border rounded-xl p-5 space-y-4">
           <div>
             <h3 className="font-medium">Taxă de pornire</h3>
             <p className="text-sm text-muted-foreground mt-0.5">Se adaugă la calculul per km, doar pentru distanțe medii.</p>
@@ -227,8 +232,8 @@ export function PretConfigForm({ config, vehicleTypes }: Props) {
           </div>
         </div>
 
-        {/* Program + fallback per km */}
-        <div className="bg-white border rounded-xl p-6 space-y-4">
+        {/* Alte setări */}
+        <div className="bg-white border rounded-xl p-5 space-y-4">
           <h3 className="font-medium">Alte setări</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -303,6 +308,90 @@ export function PretConfigForm({ config, vehicleTypes }: Props) {
           {isConfigPending ? 'Se salvează...' : 'Salvează configurația globală'}
         </Button>
       </form>
+
+      {/* ── Modal editare tip vehicul ── */}
+      <Dialog open={!!editingType} onOpenChange={(v) => { if (!v && !isTypePending) setEditingType(null) }}>
+        <DialogContent className="max-w-sm w-[calc(100vw-2rem)]">
+          <DialogHeader>
+            <DialogTitle>Editează tip vehicul</DialogTitle>
+          </DialogHeader>
+
+          {editingType && (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label>Nume tip</Label>
+                <Input
+                  value={typeForm.label}
+                  onChange={(e) => setTypeForm((p) => ({ ...p, label: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Preț local (RON)</Label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={typeForm.local_fee}
+                    onChange={(e) => setTypeForm((p) => ({ ...p, local_fee: e.target.value }))}
+                    className="pr-14"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">RON</span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Tarif extraurban (RON/km)</Label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={typeForm.per_km}
+                    onChange={(e) => setTypeForm((p) => ({ ...p, per_km: e.target.value }))}
+                    className="pr-16"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">RON/km</span>
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={typeForm.highlight}
+                  onChange={(e) => setTypeForm((p) => ({ ...p, highlight: e.target.checked }))}
+                  className="rounded h-4 w-4"
+                />
+                <Star className="h-3.5 w-3.5 text-amber-400" fill="currentColor" />
+                Cel mai solicitat
+              </label>
+
+              {typeError && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{typeError}</p>
+              )}
+              {typeSaved && (
+                <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                  ✓ Salvat cu succes.
+                </p>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setEditingType(null)}
+              disabled={isTypePending}
+            >
+              Anulează
+            </Button>
+            <Button onClick={handleSaveType} disabled={isTypePending}>
+              {isTypePending ? 'Se salvează...' : 'Salvează'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
