@@ -1,15 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { Phone, MapPin, AlertCircle } from 'lucide-react'
-
-const TARIFE = [
-  { id: 'autoturism', label: 'Autoturism', base: 150, perKm: 4 },
-  { id: 'avariat', label: 'Auto avariat', base: 200, perKm: 4 },
-  { id: 'autoutilitara', label: 'Autoutilitară', base: 250, perKm: 5 },
-] as const
-
-type TarifId = (typeof TARIFE)[number]['id']
+import { Phone, MapPin, AlertCircle, Clock } from 'lucide-react'
+import {
+  type TractariConfig,
+  DEFAULT_TRACTARI_CONFIG,
+  calcBaseFee,
+  calcTractariTotal,
+  isLongDistance,
+} from '@/lib/tractari-pricing'
 
 // Distanțe orientative de la Alba Iulia (one-way)
 const DESTINATIONS = [
@@ -29,47 +28,29 @@ const DESTINATIONS = [
   { label: 'Petroșani', km: 120 },
 ] as const
 
-const LONG_DISTANCE_THRESHOLD = 100 // km one-way
+interface PriceSimulatorProps {
+  config?: TractariConfig
+}
 
-export function PriceSimulator() {
-  const [type, setType] = useState<TarifId>('autoturism')
+export function PriceSimulator({ config = DEFAULT_TRACTARI_CONFIG }: PriceSimulatorProps) {
   const [km, setKm] = useState('')
 
-  const tarif = TARIFE.find((t) => t.id === type)!
   const oneWay = Math.max(0, parseInt(km) || 0)
+  const isLocal = oneWay === 0
+  const longDist = isLongDistance(oneWay, config)
+  const total = calcTractariTotal(oneWay, config)
+  const baseFee = calcBaseFee(oneWay, config)
   const roundTrip = oneWay * 2
-  const total = tarif.base + roundTrip * tarif.perKm
-  const isLongDistance = oneWay > LONG_DISTANCE_THRESHOLD
-
-  function selectDestination(destKm: number) {
-    setKm(destKm > 0 ? String(destKm) : '')
-  }
 
   return (
     <div className="bg-white border-2 rounded-2xl p-6 shadow-sm" style={{ borderColor: '#16a34a' }}>
       <h3 className="text-xl font-bold mb-1">Simulator preț</h3>
-      <p className="text-sm text-muted-foreground mb-6">Estimare orientativă — tariful final se confirmă telefonic.</p>
-
-      {/* Tip vehicul */}
-      <div className="mb-5">
-        <p className="text-sm font-medium mb-2">Tip vehicul</p>
-        <div className="grid grid-cols-3 gap-2">
-          {TARIFE.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setType(t.id)}
-              className="px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all"
-              style={
-                type === t.id
-                  ? { backgroundColor: '#16a34a', borderColor: '#16a34a', color: '#fff' }
-                  : { borderColor: '#e2e8f0', color: '#374151', backgroundColor: '#f8fafc' }
-              }
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+      <p className="text-sm text-muted-foreground mb-1">
+        Estimare orientativă — tariful final se confirmă telefonic.
+      </p>
+      <div className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-1.5 mb-6 w-fit">
+        <Clock className="h-3.5 w-3.5" />
+        {config.schedule_label}
       </div>
 
       {/* Destinație populară */}
@@ -81,7 +62,7 @@ export function PriceSimulator() {
         <select
           id="destination-select"
           value={km}
-          onChange={(e) => selectDestination(parseInt(e.target.value) || 0)}
+          onChange={(e) => setKm(e.target.value === '0' ? '' : e.target.value)}
           className="w-full border rounded-lg px-4 py-2.5 text-base bg-white focus:outline-none focus:ring-2"
           style={{ borderColor: '#cbd5e1' }}
         >
@@ -94,7 +75,7 @@ export function PriceSimulator() {
         </select>
       </div>
 
-      {/* Distanta manuala */}
+      {/* Distanță manuală */}
       <div className="mb-6">
         <label className="text-sm font-medium mb-2 block" htmlFor="km-input">
           Distanță one-way (km)
@@ -115,38 +96,46 @@ export function PriceSimulator() {
           </span>
         </div>
         <p className="text-xs text-muted-foreground mt-1">
-          Sau introdu manual distanța. 0 = tractare locală în Alba Iulia.
+          0 = tractare locală în Alba Iulia
         </p>
       </div>
 
       {/* Rezultat */}
-      <div
-        className="rounded-xl p-5 mb-5"
-        style={{ backgroundColor: '#f0fdf4' }}
-      >
-        {oneWay > 0 ? (
+      <div className="rounded-xl p-5 mb-5" style={{ backgroundColor: '#f0fdf4' }}>
+        {isLocal ? (
+          <p className="text-sm text-slate-600 mb-3">Tractare locală — tarif fix</p>
+        ) : longDist ? (
           <div className="space-y-2 mb-3">
             <p className="text-sm text-slate-600">
               Dus-întors: <span className="font-semibold">2 × {oneWay} km = {roundTrip} km</span>
             </p>
             <p className="text-sm text-slate-600">
-              Calcul: {tarif.base} RON + {roundTrip} km × {tarif.perKm} lei
+              {config.price_per_km} RON/km × {roundTrip} km
             </p>
           </div>
         ) : (
-          <p className="text-sm text-slate-600 mb-2">Tractare locală — tarif fix</p>
+          <div className="space-y-2 mb-3">
+            <p className="text-sm text-slate-600">
+              Dus-întors: <span className="font-semibold">2 × {oneWay} km = {roundTrip} km</span>
+            </p>
+            <p className="text-sm text-slate-600">
+              Calcul: {baseFee > 0 ? `${baseFee} RON taxă + ` : ''}{roundTrip} km × {config.price_per_km} RON
+            </p>
+          </div>
         )}
 
         <div className="flex items-baseline justify-between gap-4 pt-2 border-t border-green-200">
-          <span className="text-sm font-medium text-slate-700">Estimare:</span>
+          <span className="text-sm font-medium text-slate-700">
+            {longDist ? 'Estimare minimă:' : 'Estimare:'}
+          </span>
           <span className="text-3xl font-bold" style={{ color: '#16a34a' }}>
-            ~{total} RON
+            ~{longDist ? Math.round(roundTrip * config.price_per_km) : total} RON
           </span>
         </div>
       </div>
 
-      {/* Avertisment distanta mare */}
-      {isLongDistance && (
+      {/* Avertisment distanță mare */}
+      {longDist && (
         <div
           className="rounded-xl p-4 mb-5 flex gap-3"
           style={{ backgroundColor: '#fef3c7', borderLeft: '4px solid #f59e0b' }}
@@ -157,8 +146,8 @@ export function PriceSimulator() {
               Distanță mare ({oneWay} km)
             </p>
             <p style={{ color: '#92400e' }}>
-              Pentru distanțe peste {LONG_DISTANCE_THRESHOLD} km prețul este orientativ și se{' '}
-              <strong>negociază telefonic</strong>. Sună-ne pentru un tarif personalizat.
+              Pentru distanțe peste {config.long_distance_km} km tariful se{' '}
+              <strong>negociază telefonic</strong>. Taxa de pornire nu se aplică.
             </p>
           </div>
         </div>
@@ -170,7 +159,7 @@ export function PriceSimulator() {
         className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-semibold text-sm transition-colors hover:opacity-90"
       >
         <Phone className="h-4 w-4" />
-        {isLongDistance ? 'Sună pentru preț exact' : 'Confirmă prețul'} — +40 732 083 657
+        {longDist ? 'Sună pentru preț exact' : 'Confirmă prețul'} — +40 732 083 657
       </a>
     </div>
   )

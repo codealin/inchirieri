@@ -1,11 +1,11 @@
 import Link from 'next/link'
-import { LayoutDashboard, Car, MessageSquare } from 'lucide-react'
+import { LayoutDashboard, Car, MessageSquare, Tag } from 'lucide-react'
 import { SignOutButton } from './SignOutButton'
 import { createSupabaseAdminClient } from '@/lib/supabase'
 
 interface AdminShellProps {
   children: React.ReactNode
-  activeSection?: 'dashboard' | 'masini' | 'contact'
+  activeSection?: 'dashboard' | 'masini' | 'contact' | 'preturi'
 }
 
 async function getCounts() {
@@ -81,6 +81,17 @@ export async function AdminShell({ children, activeSection }: AdminShellProps) {
                 {unresolvedContacts}
               </span>
             )}
+          </Link>
+          <Link
+            href="/admin/preturi"
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
+              activeSection === 'preturi'
+                ? 'bg-slate-700 text-white'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <Tag className="h-4 w-4" />
+            Prețuri tractări
           </Link>
         </nav>
 

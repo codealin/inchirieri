@@ -243,6 +243,27 @@ export async function uploadCarImage(carId: string, formData: FormData) {
   }
 }
 
+// ── Tractari config actions ──────────────────────────────────────────────────
+
+export interface TractariConfigInput {
+  price_per_km: number
+  local_fee: number
+  base_fee: number
+  base_fee_min_km: number
+  long_distance_km: number
+  schedule_label: string
+}
+
+export async function updateTractariConfig(data: TractariConfigInput) {
+  const supabase = createSupabaseAdminClient()
+  const { error } = await supabase
+    .from('tractari_config')
+    .upsert({ id: 1, ...data, updated_at: new Date().toISOString() })
+  if (error) return { error: error.message }
+  revalidatePath('/tractari')
+  revalidatePath('/admin/preturi')
+}
+
 // ── Contact request actions ──────────────────────────────────────────────────
 
 export async function markContactResolved(id: string) {
