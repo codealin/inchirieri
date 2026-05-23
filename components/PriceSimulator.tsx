@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { Phone, MapPin, AlertCircle, Clock } from 'lucide-react'
 import {
   type TractariConfig,
+  type VehicleType,
   DEFAULT_TRACTARI_CONFIG,
+  DEFAULT_VEHICLE_TYPES,
   calcBaseFee,
   calcTractariTotal,
   isLongDistance,
@@ -30,15 +32,22 @@ const DESTINATIONS = [
 
 interface PriceSimulatorProps {
   config?: TractariConfig
+  vehicleTypes?: VehicleType[]
 }
 
-export function PriceSimulator({ config = DEFAULT_TRACTARI_CONFIG }: PriceSimulatorProps) {
+export function PriceSimulator({
+  config = DEFAULT_TRACTARI_CONFIG,
+  vehicleTypes = DEFAULT_VEHICLE_TYPES,
+}: PriceSimulatorProps) {
+  const sorted = [...vehicleTypes].sort((a, b) => a.position - b.position)
+  const [selectedTypeId, setSelectedTypeId] = useState<number>(sorted[0]?.id ?? 1)
   const [km, setKm] = useState('')
 
+  const selectedType = sorted.find((t) => t.id === selectedTypeId) ?? sorted[0]
   const oneWay = Math.max(0, parseInt(km) || 0)
   const isLocal = oneWay === 0
   const longDist = isLongDistance(oneWay, config)
-  const total = calcTractariTotal(oneWay, config)
+  const total = calcTractariTotal(oneWay, config, selectedType)
   const baseFee = calcBaseFee(oneWay, config)
   const roundTrip = oneWay * 2
 
@@ -51,6 +60,28 @@ export function PriceSimulator({ config = DEFAULT_TRACTARI_CONFIG }: PriceSimula
       <div className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-1.5 mb-6 w-fit">
         <Clock className="h-3.5 w-3.5" />
         {config.schedule_label}
+      </div>
+
+      {/* Tip vehicul */}
+      <div className="mb-5">
+        <p className="text-sm font-medium mb-2">Tip vehicul</p>
+        <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${sorted.length}, 1fr)` }}>
+          {sorted.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setSelectedTypeId(t.id)}
+              className="px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all"
+              style={
+                selectedTypeId === t.id
+                  ? { backgroundColor: '#16a34a', borderColor: '#16a34a', color: '#fff' }
+                  : { borderColor: '#e2e8f0', color: '#374151', backgroundColor: '#f8fafc' }
+              }
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Destinație populară */}
@@ -95,22 +126,22 @@ export function PriceSimulator({ config = DEFAULT_TRACTARI_CONFIG }: PriceSimula
             km
           </span>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          0 = tractare locală în Alba Iulia
-        </p>
+        <p className="text-xs text-muted-foreground mt-1">0 = tractare locală în Alba Iulia</p>
       </div>
 
       {/* Rezultat */}
       <div className="rounded-xl p-5 mb-5" style={{ backgroundColor: '#f0fdf4' }}>
         {isLocal ? (
-          <p className="text-sm text-slate-600 mb-3">Tractare locală — tarif fix</p>
+          <p className="text-sm text-slate-600 mb-3">
+            Tractare locală — tarif fix <span className="font-semibold">{selectedType?.label}</span>
+          </p>
         ) : longDist ? (
           <div className="space-y-2 mb-3">
             <p className="text-sm text-slate-600">
               Dus-întors: <span className="font-semibold">2 × {oneWay} km = {roundTrip} km</span>
             </p>
             <p className="text-sm text-slate-600">
-              {config.price_per_km} RON/km × {roundTrip} km
+              {selectedType?.per_km ?? config.price_per_km} RON/km × {roundTrip} km
             </p>
           </div>
         ) : (
@@ -119,7 +150,8 @@ export function PriceSimulator({ config = DEFAULT_TRACTARI_CONFIG }: PriceSimula
               Dus-întors: <span className="font-semibold">2 × {oneWay} km = {roundTrip} km</span>
             </p>
             <p className="text-sm text-slate-600">
-              Calcul: {baseFee > 0 ? `${baseFee} RON taxă + ` : ''}{roundTrip} km × {config.price_per_km} RON
+              {baseFee > 0 ? `${baseFee} RON taxă + ` : ''}
+              {roundTrip} km × {selectedType?.per_km ?? config.price_per_km} RON
             </p>
           </div>
         )}
@@ -129,7 +161,9 @@ export function PriceSimulator({ config = DEFAULT_TRACTARI_CONFIG }: PriceSimula
             {longDist ? 'Estimare minimă:' : 'Estimare:'}
           </span>
           <span className="text-3xl font-bold" style={{ color: '#16a34a' }}>
-            ~{longDist ? Math.round(roundTrip * config.price_per_km) : total} RON
+            ~{longDist
+              ? Math.round(roundTrip * (selectedType?.per_km ?? config.price_per_km))
+              : total} RON
           </span>
         </div>
       </div>
@@ -146,8 +180,8 @@ export function PriceSimulator({ config = DEFAULT_TRACTARI_CONFIG }: PriceSimula
               Distanță mare ({oneWay} km)
             </p>
             <p style={{ color: '#92400e' }}>
-              Pentru distanțe peste {config.long_distance_km} km tariful se{' '}
-              <strong>negociază telefonic</strong>. Taxa de pornire nu se aplică.
+              Peste {config.long_distance_km} km tariful se <strong>negociază telefonic</strong>.
+              Taxa de pornire nu se aplică.
             </p>
           </div>
         </div>

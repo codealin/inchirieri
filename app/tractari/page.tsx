@@ -4,7 +4,12 @@ import { ContactForm } from '@/components/ContactForm'
 import { WhatsAppButton } from '@/components/WhatsAppButton'
 import { PriceSimulator } from '@/components/PriceSimulator'
 import { createSupabaseAdminClient } from '@/lib/supabase'
-import { DEFAULT_TRACTARI_CONFIG, type TractariConfig } from '@/lib/tractari-pricing'
+import {
+  DEFAULT_TRACTARI_CONFIG,
+  DEFAULT_VEHICLE_TYPES,
+  type TractariConfig,
+  type VehicleType,
+} from '@/lib/tractari-pricing'
 
 export const metadata: Metadata = {
   title: 'Tractări Auto Alba Iulia',
@@ -12,26 +17,43 @@ export const metadata: Metadata = {
     'Tractări auto rapide în Alba Iulia și împrejurimi. Autoturisme, mașini avariate, autoutilitare. Prețuri transparente, tarif per km.',
 }
 
-async function getTractariConfig(): Promise<TractariConfig> {
+async function getPageData(): Promise<{ config: TractariConfig; vehicleTypes: VehicleType[] }> {
   try {
     const supabase = createSupabaseAdminClient()
-    const { data } = await supabase.from('tractari_config').select('*').eq('id', 1).single()
-    if (!data) return DEFAULT_TRACTARI_CONFIG
-    return {
-      price_per_km: Number(data.price_per_km),
-      local_fee: Number(data.local_fee),
-      base_fee: Number(data.base_fee),
-      base_fee_min_km: data.base_fee_min_km,
-      long_distance_km: data.long_distance_km,
-      schedule_label: data.schedule_label,
-    }
+    const [{ data: configData }, { data: typesData }] = await Promise.all([
+      supabase.from('tractari_config').select('*').eq('id', 1).single(),
+      supabase.from('tractari_vehicle_types').select('*').order('position'),
+    ])
+
+    const config: TractariConfig = configData
+      ? {
+          price_per_km: Number(configData.price_per_km),
+          local_fee: Number(configData.local_fee),
+          base_fee: Number(configData.base_fee),
+          base_fee_min_km: configData.base_fee_min_km,
+          long_distance_km: configData.long_distance_km,
+          schedule_label: configData.schedule_label,
+        }
+      : DEFAULT_TRACTARI_CONFIG
+
+    const vehicleTypes: VehicleType[] = (typesData ?? []).map((t) => ({
+      id: t.id,
+      label: t.label,
+      local_fee: Number(t.local_fee),
+      per_km: Number(t.per_km),
+      highlight: t.highlight,
+      position: t.position,
+    }))
+
+    return { config, vehicleTypes: vehicleTypes.length ? vehicleTypes : DEFAULT_VEHICLE_TYPES }
   } catch {
-    return DEFAULT_TRACTARI_CONFIG
+    return { config: DEFAULT_TRACTARI_CONFIG, vehicleTypes: DEFAULT_VEHICLE_TYPES }
   }
 }
 
 export default async function TractariPage() {
-  const config = await getTractariConfig()
+  const { config, vehicleTypes } = await getPageData()
+  const sorted = [...vehicleTypes].sort((a, b) => a.position - b.position)
 
   return (
     <>
@@ -45,14 +67,8 @@ export default async function TractariPage() {
           backgroundColor: '#14532d',
         }}
       >
-        <div
-          className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10"
-          style={{ backgroundColor: '#16a34a' }}
-        />
-        <div
-          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full opacity-10"
-          style={{ backgroundColor: '#16a34a' }}
-        />
+        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10" style={{ backgroundColor: '#16a34a' }} />
+        <div className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full opacity-10" style={{ backgroundColor: '#16a34a' }} />
 
         <div className="relative max-w-4xl mx-auto text-center">
           <p className="text-green-300 font-medium mb-3 tracking-wide uppercase text-sm">
@@ -86,7 +102,7 @@ export default async function TractariPage() {
         </div>
       </section>
 
-      {/* Tarife */}
+      {/* Tarife per tip vehicul */}
       <section className="py-16 px-4 bg-slate-50">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold mb-2 text-center">Tarife tractări</h2>
@@ -94,50 +110,48 @@ export default async function TractariPage() {
             Prețuri valabile în zona Alba Iulia. Sună pentru detalii și disponibilitate.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* Tarif local */}
-            <div className="bg-white rounded-xl border-2 border-slate-200 p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">Tractare locală</p>
-              <p className="text-3xl font-bold mb-1" style={{ color: '#16a34a' }}>
-                {config.local_fee} RON
-              </p>
-              <p className="text-sm text-slate-500">Tarif fix, în Alba Iulia</p>
-            </div>
-
-            {/* Tarif extraurban */}
-            <div className="bg-white rounded-xl border-2 border-green-500 p-6 shadow-sm">
-              <span
-                className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-3"
-                style={{ backgroundColor: '#dcfce7', color: '#166534' }}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            {sorted.map((t) => (
+              <div
+                key={t.id}
+                className={`bg-white rounded-xl border-2 p-6 shadow-sm flex flex-col gap-4 ${
+                  t.highlight ? 'border-green-500' : 'border-slate-200'
+                }`}
               >
-                {config.schedule_label}
-              </span>
-              <p className="text-3xl font-bold mb-1" style={{ color: '#16a34a' }}>
-                {config.price_per_km} RON<span className="text-lg font-medium text-slate-500">/km</span>
-              </p>
-              <p className="text-sm text-slate-500">
-                Extraurban (dus-întors)
-                {config.base_fee > 0 && (
-                  <span className="block mt-1">
-                    + taxă pornire {config.base_fee} RON (curse {config.base_fee_min_km * 2}–{config.long_distance_km * 2} km RT)
+                {t.highlight && (
+                  <span
+                    className="self-start text-xs font-semibold px-2.5 py-1 rounded-full"
+                    style={{ backgroundColor: '#dcfce7', color: '#166534' }}
+                  >
+                    Cel mai solicitat
                   </span>
                 )}
-              </p>
-            </div>
-
-            {/* Distanță mare */}
-            <div className="bg-white rounded-xl border-2 border-slate-200 p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
-                Distanță mare (&gt;{config.long_distance_km} km)
-              </p>
-              <p className="text-3xl font-bold mb-1 text-slate-700">Negociat</p>
-              <p className="text-sm text-slate-500">Fără taxă de pornire. Sună pentru preț exact.</p>
-            </div>
+                <div>
+                  <h3 className="font-bold text-lg mb-3">{t.label}</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                      <span className="text-sm text-slate-500">Preț local (Alba Iulia)</span>
+                      <span className="font-bold text-xl" style={{ color: '#16a34a' }}>
+                        {t.local_fee} RON
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-sm text-slate-500">Extraurban</span>
+                      <span className="font-semibold text-slate-700">{t.per_km} lei/km</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <p className="text-center text-sm text-muted-foreground">
-            * Prețurile sunt orientative. Tariful final se stabilește în funcție de distanță și situație.
-          </p>
+          {config.base_fee > 0 && (
+            <p className="text-center text-sm text-muted-foreground">
+              * Taxă de pornire de <strong>{config.base_fee} RON</strong> pentru curse între{' '}
+              {config.base_fee_min_km * 2}–{config.long_distance_km * 2} km (dus-întors).
+              Prețurile sunt orientative — tariful final se confirmă telefonic.
+            </p>
+          )}
         </div>
       </section>
 
@@ -146,9 +160,9 @@ export default async function TractariPage() {
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl font-bold mb-2 text-center">Calculează prețul</h2>
           <p className="text-muted-foreground text-center mb-10">
-            Introdu distanța pentru o estimare rapidă.
+            Selectează tipul vehiculului și introdu distanța pentru o estimare rapidă.
           </p>
-          <PriceSimulator config={config} />
+          <PriceSimulator config={config} vehicleTypes={sorted} />
         </div>
       </section>
 

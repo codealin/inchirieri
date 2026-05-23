@@ -264,6 +264,27 @@ export async function updateTractariConfig(data: TractariConfigInput) {
   revalidatePath('/admin/preturi')
 }
 
+export interface VehicleTypeInput {
+  id: number
+  label: string
+  local_fee: number
+  per_km: number
+  highlight: boolean
+}
+
+export async function updateVehicleTypes(types: VehicleTypeInput[]) {
+  const supabase = createSupabaseAdminClient()
+  for (const t of types) {
+    const { error } = await supabase
+      .from('tractari_vehicle_types')
+      .update({ label: t.label, local_fee: t.local_fee, per_km: t.per_km, highlight: t.highlight })
+      .eq('id', t.id)
+    if (error) return { error: error.message }
+  }
+  revalidatePath('/tractari')
+  revalidatePath('/admin/preturi')
+}
+
 // ── Contact request actions ──────────────────────────────────────────────────
 
 export async function markContactResolved(id: string) {
