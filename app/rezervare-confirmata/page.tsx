@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Script from 'next/script'
 import { CheckCircle2, Phone } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
@@ -6,6 +7,17 @@ import { Button } from '@/components/ui/button'
 export default function ConfirmationPage() {
   return (
     <>
+      {/* Google Ads conversion event — fired when reservation is confirmed */}
+      <Script id="gtag-conversion" strategy="afterInteractive">
+        {`
+          gtag('event', 'conversion', {
+            'send_to': 'AW-18194512466/UHHcCNzy9LQcENL06OND',
+            'value': 1.0,
+            'currency': 'RON',
+            'transaction_id': ''
+          });
+        `}
+      </Script>
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-4 py-16">
         <div className="max-w-md text-center">
@@ -23,13 +35,13 @@ export default function ConfirmationPage() {
             Dacă nu ești contactat în 2 ore, sună-ne direct:
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="tel:+40732083657">
+            <a href="tel:+40721999922">
               <Button variant="default" className="gap-2">
                 <Phone className="h-4 w-4" />
-                +40 732 083 657
+                +40 721 999 922
               </Button>
             </a>
-            <Link href="/">
+            <Link href="/inchirieri">
               <Button variant="outline">Înapoi la mașini</Button>
             </Link>
           </div>

@@ -82,7 +82,7 @@ function adminHtml(d: EmailData & { start: string; end: string }) {
         </tr>
         <tr>
           <td style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e5e7eb">
-            <p style="margin:0;font-size:12px;color:#9ca3af">Expert Doi Trans · Alba Iulia, Micești · +40 732 083 657</p>
+            <p style="margin:0;font-size:12px;color:#9ca3af">Expert Doi Trans · Alba Iulia, Micești · +40 721 999 922</p>
           </td>
         </tr>
       </table>
@@ -122,7 +122,7 @@ function customerHtml(d: { customerName: string; carName: string; start: string;
             </div>
 
             <p style="margin:0;font-size:14px;color:#555">Ai întrebări? Sună-ne:</p>
-            <a href="tel:+40732083657" style="display:inline-block;margin-top:10px;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px">+40 732 083 657</a>
+            <a href="tel:+40721999922" style="display:inline-block;margin-top:10px;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px">+40 721 999 922</a>
           </td>
         </tr>
         <tr>
@@ -189,7 +189,7 @@ function contactHtml(d: ContactEmailData) {
         </tr>
         <tr>
           <td style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e5e7eb">
-            <p style="margin:0;font-size:12px;color:#9ca3af">Expert Doi Trans · Alba Iulia, Micești · +40 732 083 657</p>
+            <p style="margin:0;font-size:12px;color:#9ca3af">Expert Doi Trans · Alba Iulia, Micești · +40 721 999 922</p>
           </td>
         </tr>
       </table>

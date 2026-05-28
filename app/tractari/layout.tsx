@@ -32,7 +32,7 @@ export default function TractariLayout({ children }: { children: React.ReactNode
             </Link>
             <span className="text-green-700 text-sm hidden sm:inline">|</span>
             <Link
-              href="/"
+              href="/inchirieri"
               className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-green-200 hover:text-white transition-colors shrink-0 group"
             >
               Închirieri auto
@@ -46,12 +46,12 @@ export default function TractariLayout({ children }: { children: React.ReactNode
               <Link href="/tractari/contact" className="hover:text-white transition-colors">Contact</Link>
             </nav>
             <a
-              href="tel:+40732083657"
+              href="tel:+40721999922"
               style={{ backgroundColor: '#ffffff', color: '#14532d' }}
               className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:opacity-90 shrink-0"
             >
               <Phone className="h-4 w-4" />
-              <span className="hidden sm:inline">+40 732 083 657</span>
+              <span className="hidden sm:inline">+40 721 999 922</span>
               <span className="sm:hidden">Sună</span>
             </a>
           </div>
@@ -61,7 +61,7 @@ export default function TractariLayout({ children }: { children: React.ReactNode
           className="md:hidden flex items-center justify-center gap-6 py-2 border-t border-green-800 text-sm text-green-200"
           style={{ backgroundColor: '#0f3d22' }}
         >
-          <Link href="/" className="inline-flex items-center gap-1 hover:text-white transition-colors font-semibold">
+          <Link href="/inchirieri" className="inline-flex items-center gap-1 hover:text-white transition-colors font-semibold">
             Închirieri
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
@@ -77,13 +77,13 @@ export default function TractariLayout({ children }: { children: React.ReactNode
           <div>
             <p className="text-white font-semibold text-lg mb-1">Expert Doi Trans — Tractări</p>
             <p>Alba Iulia și împrejurimi</p>
-            <a href="tel:+40732083657" className="text-green-400 hover:text-green-200 transition-colors">
-              +40 732 083 657
+            <a href="tel:+40721999922" className="text-green-400 hover:text-green-200 transition-colors">
+              +40 721 999 922
             </a>
           </div>
           <div className="text-sm">
             <p>© {new Date().getFullYear()} Expert Doi Trans. Toate drepturile rezervate.</p>
-            <Link href="/" className="text-green-600 hover:text-green-400 text-xs mt-1 block">
+            <Link href="/inchirieri" className="text-green-600 hover:text-green-400 text-xs mt-1 block">
               Mergi la Închirieri Auto →
             </Link>
           </div>

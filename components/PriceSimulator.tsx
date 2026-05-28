@@ -188,12 +188,12 @@ export function PriceSimulator({
       )}
 
       <a
-        href="tel:+40732083657"
+        href="tel:+40721999922"
         style={{ backgroundColor: '#16a34a', color: '#fff' }}
         className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-semibold text-sm transition-colors hover:opacity-90"
       >
         <Phone className="h-4 w-4" />
-        {longDist ? 'Sună pentru preț exact' : 'Confirmă prețul'} — +40 732 083 657
+        {longDist ? 'Sună pentru preț exact' : 'Confirmă prețul'} — +40 721 999 922
       </a>
     </div>
   )

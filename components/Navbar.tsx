@@ -8,7 +8,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
         <div className="flex items-center gap-4 min-w-0">
-          <Link href="/" className="flex items-center gap-2 min-w-0 shrink-0">
+          <Link href="/inchirieri" className="flex items-center gap-2 min-w-0 shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo-inchirieri.png"
@@ -33,12 +33,12 @@ export function Navbar() {
         </div>
 
         <a
-          href="tel:+40732083657"
+          href="tel:+40721999922"
           style={{ backgroundColor: '#2563eb', color: '#fff' }}
           className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:opacity-90 shrink-0"
         >
           <Phone className="h-4 w-4" />
-          <span className="hidden sm:inline">+40 732 083 657</span>
+          <span className="hidden sm:inline">+40 721 999 922</span>
           <span className="sm:hidden">Sună</span>
         </a>
       </div>

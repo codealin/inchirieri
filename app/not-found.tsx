@@ -14,11 +14,11 @@ export default function NotFound() {
             Pagina pe care o cauți nu există sau a fost mutată.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/">
-              <Button variant="default">Înapoi la mașini</Button>
+            <Link href="/tractari">
+              <Button variant="default">Acasă</Button>
             </Link>
-            <a href="tel:+40732083657">
-              <Button variant="outline">+40 732 083 657</Button>
+            <a href="tel:+40721999922">
+              <Button variant="outline">+40 721 999 922</Button>
             </a>
           </div>
         </div>

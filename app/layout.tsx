@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { DM_Sans } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 import { SITE_URL, BUSINESS } from '@/lib/config'
 
@@ -55,7 +56,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ro" className={`${dmSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        {/* Google Ads tag */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-18194512466"
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-18194512466');
+          `}
+        </Script>
+      </body>
     </html>
   )
 }

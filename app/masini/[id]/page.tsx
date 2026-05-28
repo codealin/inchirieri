@@ -80,7 +80,7 @@ export default async function CarPage({ params }: PageProps) {
 
       <main className="max-w-6xl mx-auto px-4 py-8 flex-1">
         <Link
-          href="/"
+          href="/inchirieri"
           className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground mb-6 text-sm transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />

@@ -23,8 +23,8 @@ export function ContactForm({ type = 'tractari' }: ContactFormProps) {
         <h3 className="text-xl font-bold text-green-800 mb-2">Mesaj trimis!</h3>
         <p className="text-green-700">
           Te vom contacta telefonic în cel mai scurt timp. Poți suna direct la{' '}
-          <a href="tel:+40732083657" className="font-semibold underline">
-            +40 732 083 657
+          <a href="tel:+40721999922" className="font-semibold underline">
+            +40 721 999 922
           </a>
           .
         </p>

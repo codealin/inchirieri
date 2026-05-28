@@ -85,12 +85,12 @@ export default async function TractariPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
-              href="tel:+40732083657"
+              href="tel:+40721999922"
               style={{ backgroundColor: '#16a34a', color: '#fff' }}
               className="inline-flex items-center justify-center gap-2 text-base font-semibold px-8 py-3.5 rounded-lg transition-colors hover:opacity-90"
             >
               <Phone className="h-5 w-5" />
-              Sună acum — +40 732 083 657
+              Sună acum — +40 721 999 922
             </a>
             <a
               href="#contact"
@@ -172,8 +172,8 @@ export default async function TractariPage() {
           <h2 className="text-3xl font-bold mb-2 text-center">Contactează-ne</h2>
           <p className="text-muted-foreground text-center mb-10">
             Completează formularul și te sunăm noi, sau sună direct la{' '}
-            <a href="tel:+40732083657" className="font-medium" style={{ color: '#16a34a' }}>
-              +40 732 083 657
+            <a href="tel:+40721999922" className="font-medium" style={{ color: '#16a34a' }}>
+              +40 721 999 922
             </a>
             .
           </p>

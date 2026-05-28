@@ -15,18 +15,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     {
-      url: SITE_URL,
+      url: `${SITE_URL}/tractari`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1,
     },
-    ...carPages,
     {
-      url: `${SITE_URL}/tractari`,
+      url: `${SITE_URL}/inchirieri`,
       lastModified: new Date(),
-      changeFrequency: 'weekly',
+      changeFrequency: 'daily',
       priority: 0.9,
     },
+    ...carPages,
     {
       url: `${SITE_URL}/tractari/despre`,
       lastModified: new Date(),
