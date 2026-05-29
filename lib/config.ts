@@ -1,5 +1,4 @@
-// Actualizează SITE_URL când ai domeniu propriu
-export const SITE_URL = 'https://inchirieri.vercel.app'
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://autoalba.ro'
 
 export const BUSINESS = {
   name: 'Expert Doi Trans',
