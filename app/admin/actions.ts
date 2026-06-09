@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createSupabaseAdminClient } from '@/lib/supabase'
+import { slugify } from '@/lib/slug'
 
 // ── Reservation actions ──────────────────────────────────────────────────────
 
@@ -40,6 +41,7 @@ export async function updateReservationDates(
 
 export interface CarFormData {
   name: string
+  slug: string
   engine: string
   transmission: string
   fuel_type: string
@@ -49,42 +51,85 @@ export interface CarFormData {
   description: string
 }
 
+async function resolveUniqueSlug(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  base: string,
+  excludeId?: string
+): Promise<string> {
+  let candidate = base
+  let n = 2
+  while (true) {
+    let q = supabase.from('cars').select('id').eq('slug', candidate).limit(1)
+    if (excludeId) q = q.neq('id', excludeId)
+    const { data } = await q
+    if (!data || data.length === 0) return candidate
+    candidate = `${base}-${n++}`
+  }
+}
+
 export async function createCar(data: CarFormData) {
   const supabase = createSupabaseAdminClient()
+
+  const sanitized = slugify(data.slug)
+  const slug = sanitized
+    ? sanitized
+    : await resolveUniqueSlug(supabase, slugify(data.name) || 'masina')
+
   const { data: created, error } = await supabase
     .from('cars')
     .insert({
-      ...data,
+      name: data.name,
+      slug,
       engine: data.engine || null,
       transmission: data.transmission || null,
       fuel_type: data.fuel_type || null,
+      price_per_day: data.price_per_day,
       image_url: data.image_url || null,
+      available: data.available,
       description: data.description || null,
     })
-    .select('id')
+    .select('id, slug')
     .single()
-  if (error) return { error: error.message }
+
+  if (error) {
+    if (error.code === '23505') return { error: 'Acest slug este deja folosit de altă mașină.' }
+    return { error: error.message }
+  }
   revalidatePath('/admin/masini')
   revalidatePath('/')
-  return { id: created.id as string }
+  return { id: created.id as string, slug: created.slug as string }
 }
 
 export async function updateCar(id: string, data: CarFormData) {
   const supabase = createSupabaseAdminClient()
+
+  const sanitized = slugify(data.slug)
+  const slug = sanitized
+    ? sanitized
+    : await resolveUniqueSlug(supabase, slugify(data.name) || 'masina', id)
+
   const { error } = await supabase
     .from('cars')
     .update({
-      ...data,
+      name: data.name,
+      slug,
       engine: data.engine || null,
       transmission: data.transmission || null,
       fuel_type: data.fuel_type || null,
+      price_per_day: data.price_per_day,
       image_url: data.image_url || null,
+      available: data.available,
       description: data.description || null,
     })
     .eq('id', id)
-  if (error) return { error: error.message }
+
+  if (error) {
+    if (error.code === '23505') return { error: 'Acest slug este deja folosit de altă mașină.' }
+    return { error: error.message }
+  }
   revalidatePath('/admin/masini')
   revalidatePath('/')
+  revalidatePath(`/masini/${slug}`)
 }
 
 export async function deleteCar(id: string) {
@@ -144,7 +189,6 @@ export async function uploadMainImage(carId: string, formData: FormData) {
 
     revalidatePath('/')
     revalidatePath('/admin/masini')
-    revalidatePath(`/masini/${carId}`)
     return { url: publicUrl }
   } catch (err) {
     console.error('[uploadMainImage] uncaught:', err)
@@ -166,7 +210,6 @@ export async function removeMainImage(carId: string) {
 
   revalidatePath('/')
   revalidatePath('/admin/masini')
-  revalidatePath(`/masini/${carId}`)
 }
 
 // ── Car image actions ────────────────────────────────────────────────────────

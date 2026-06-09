@@ -98,7 +98,7 @@ export function CarCard({ car }: CarCardProps) {
   if (!car.available) return inner
 
   return (
-    <Link href={`/masini/${car.id}`} className="block h-full">
+    <Link href={`/masini/${car.slug}`} className="block h-full">
       {inner}
     </Link>
   )

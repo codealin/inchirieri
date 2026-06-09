@@ -4,10 +4,10 @@ import { SITE_URL } from '@/lib/config'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createSupabaseAdminClient()
-  const { data: cars } = await supabase.from('cars').select('id, created_at').eq('available', true)
+  const { data: cars } = await supabase.from('cars').select('slug, created_at').eq('available', true)
 
   const carPages: MetadataRoute.Sitemap = (cars ?? []).map((car) => ({
-    url: `${SITE_URL}/masini/${car.id}`,
+    url: `${SITE_URL}/masini/${car.slug}`,
     lastModified: new Date(car.created_at),
     changeFrequency: 'weekly',
     priority: 0.8,

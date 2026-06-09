@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { calculateTotalDays, calculateTotalPrice, formatCurrency } from '@/lib/pricing'
-import { submitReservation } from '@/app/masini/[id]/actions'
+import { submitReservation } from '@/app/masini/[slug]/actions'
 import type { Car } from '@/types/database'
 
 interface BookingFormProps {

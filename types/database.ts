@@ -1,6 +1,7 @@
 export interface Car {
   id: string
   name: string
+  slug: string
   engine: string | null
   transmission: string | null
   fuel_type: string | null

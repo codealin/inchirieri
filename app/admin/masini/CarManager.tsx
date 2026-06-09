@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Pencil, Trash2, Loader2, Upload, X, Images, Star } from 'lucide-react'
+import { Plus, Pencil, Trash2, Loader2, Upload, X, Images, Star, RefreshCw } from 'lucide-react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,6 +23,7 @@ import {
   uploadMainImage, removeMainImage,
   type CarFormData,
 } from '@/app/admin/actions'
+import { slugify } from '@/lib/slug'
 import type { Car } from '@/types/database'
 
 type CarImageEntry = { id: string; url: string; position: number }
@@ -30,6 +31,7 @@ type PendingFile = { file: File; previewUrl: string }
 
 const EMPTY_FORM: CarFormData = {
   name: '',
+  slug: '',
   engine: '',
   transmission: '',
   fuel_type: '',
@@ -48,6 +50,7 @@ export function CarManager({ initialCars }: CarManagerProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingCar, setEditingCar] = useState<Car | null>(null)
   const [form, setForm] = useState<CarFormData>(EMPTY_FORM)
+  const [slugTouched, setSlugTouched] = useState(false)
   const [formError, setFormError] = useState('')
   const [isPending, startTransition] = useTransition()
   const [carImages, setCarImages] = useState<CarImageEntry[]>([])
@@ -77,6 +80,7 @@ export function CarManager({ initialCars }: CarManagerProps) {
   function openAddDialog() {
     setEditingCar(null)
     setForm(EMPTY_FORM)
+    setSlugTouched(false)
     setFormError('')
     setCarImages([])
     setMainImageUrl(null)
@@ -88,8 +92,10 @@ export function CarManager({ initialCars }: CarManagerProps) {
 
   function openEditDialog(car: Car) {
     setEditingCar(car)
+    setSlugTouched(true)
     setForm({
       name: car.name,
+      slug: car.slug,
       engine: car.engine ?? '',
       transmission: car.transmission ?? '',
       fuel_type: car.fuel_type ?? '',
@@ -210,15 +216,29 @@ export function CarManager({ initialCars }: CarManagerProps) {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
     const { name, value, type } = e.target
-    setForm((prev) => ({
-      ...prev,
-      [name]:
-        type === 'checkbox'
-          ? (e.target as HTMLInputElement).checked
-          : name === 'price_per_day'
-          ? parseFloat(value) || 0
-          : value,
-    }))
+
+    if (name === 'slug') {
+      setSlugTouched(true)
+      setForm((prev) => ({ ...prev, slug: value }))
+      return
+    }
+
+    setForm((prev) => {
+      const updated = {
+        ...prev,
+        [name]:
+          type === 'checkbox'
+            ? (e.target as HTMLInputElement).checked
+            : name === 'price_per_day'
+            ? parseFloat(value) || 0
+            : value,
+      }
+      // Auto-sync slug from name in add mode until the user manually edits slug
+      if (name === 'name' && !editingCar && !slugTouched) {
+        updated.slug = slugify(value)
+      }
+      return updated
+    })
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -395,6 +415,37 @@ export function CarManager({ initialCars }: CarManagerProps) {
                 placeholder="Skoda Octavia 2020"
                 required
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="slug">Slug (URL)</Label>
+                {editingCar && (
+                  <button
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, slug: slugify(prev.name) }))}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    Regenerează din nume
+                  </button>
+                )}
+              </div>
+              <Input
+                id="slug"
+                name="slug"
+                value={form.slug}
+                onChange={handleFormChange}
+                placeholder="skoda-octavia-2020"
+              />
+              <p className="text-xs text-muted-foreground">
+                Apare în adresă: autoalba.ro/masini/<span className="font-mono">{form.slug || '…'}</span>
+              </p>
+              {editingCar && (
+                <p className="text-xs text-amber-600">
+                  Schimbarea slug-ului modifică adresa paginii.
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">

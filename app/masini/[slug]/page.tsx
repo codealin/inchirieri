@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Fuel, Settings, Gauge } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
@@ -11,20 +11,35 @@ import { CarImageGallery } from '@/components/CarImageGallery'
 import { formatCurrency } from '@/lib/pricing'
 import { SITE_URL, BUSINESS } from '@/lib/config'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params
+  const { slug } = await params
   const supabase = createSupabaseAdminClient()
-  const { data: car } = await supabase.from('cars').select('name, description, price_per_day, image_url').eq('id', id).single()
+
+  let carSlug = slug
+  if (UUID_RE.test(slug)) {
+    const { data } = await supabase.from('cars').select('slug').eq('id', slug).single()
+    if (!data) return {}
+    carSlug = data.slug
+  }
+
+  const { data: car } = await supabase
+    .from('cars')
+    .select('name, description, price_per_day, image_url')
+    .eq('slug', carSlug)
+    .single()
   if (!car) return {}
 
   const title = `${car.name} — Închirieri Auto Alba Iulia`
-  const description = car.description
-    ?? `Închiriază ${car.name} în Alba Iulia. ${car.price_per_day} RON/zi, prețuri transparente, plată la ridicare.`
-  const url = `${SITE_URL}/masini/${id}`
+  const description =
+    car.description ??
+    `Închiriază ${car.name} în Alba Iulia. ${car.price_per_day} RON/zi, prețuri transparente, plată la ridicare.`
+  const url = `${SITE_URL}/masini/${carSlug}`
 
   return {
     title,
@@ -42,28 +57,37 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function CarPage({ params }: PageProps) {
-  const { id } = await params
+  const { slug } = await params
   const supabase = createSupabaseAdminClient()
 
-  const [carResult, reservationsResult, imagesResult] = await Promise.all([
-    supabase.from('cars').select('*').eq('id', id).single(),
+  // Redirect old UUID-based URLs to canonical slug URL (308 Permanent)
+  if (UUID_RE.test(slug)) {
+    const { data } = await supabase.from('cars').select('slug').eq('id', slug).single()
+    if (!data) notFound()
+    permanentRedirect(`/masini/${data.slug}`)
+  }
+
+  const { data: car, error: carError } = await supabase
+    .from('cars')
+    .select('*')
+    .eq('slug', slug)
+    .single()
+
+  if (carError || !car) notFound()
+
+  const [reservationsResult, imagesResult] = await Promise.all([
     supabase
       .from('reservations')
       .select('start_date, end_date')
-      .eq('car_id', id)
+      .eq('car_id', car.id)
       .in('status', ['pending', 'approved']),
     supabase
       .from('car_images')
       .select('url')
-      .eq('car_id', id)
+      .eq('car_id', car.id)
       .order('position', { ascending: true }),
   ])
 
-  if (carResult.error || !carResult.data) {
-    notFound()
-  }
-
-  const car = carResult.data
   const bookedRanges = reservationsResult.data ?? []
   const additionalImages = (imagesResult.data ?? []).map((r) => r.url)
   const allImages = [car.image_url, ...additionalImages].filter(Boolean) as string[]
