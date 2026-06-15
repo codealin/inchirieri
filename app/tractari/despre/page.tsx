@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { Clock, BadgeCheck, Zap, Truck } from 'lucide-react'
-import { TRACTARI_STATS, TRACTARI_DESPRE_IMAGE } from '@/lib/config'
+import { TRACTARI_STATS, TRACTARI_DESPRE_IMAGE, SITE_URL } from '@/lib/config'
 
 export const metadata: Metadata = {
   title: 'Despre noi — Tractări Auto',
   description:
     'Servicii tractări auto profesioniste în Alba Iulia. Platforme moderne, disponibilitate 24/7, prețuri corecte.',
+  alternates: { canonical: `${SITE_URL}/tractari/despre` },
 }
 
 const features = [

@@ -11,7 +11,7 @@ import { ContactForm } from '@/components/ContactForm'
 import type { Car } from '@/types/database'
 
 export const metadata: Metadata = {
-  title: `Închirieri Auto Alba Iulia | ${BUSINESS.name}`,
+  title: 'Închirieri Auto Alba Iulia',
   description: 'Închiriază o mașină în Alba Iulia. Skoda Octavia, Seat Leon, Skoda Fabia, MG4 Electric. Prețuri de la 85 RON/zi, plată la ridicare, fără surprize.',
   alternates: { canonical: `${SITE_URL}/inchirieri` },
   openGraph: {

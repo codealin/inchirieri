@@ -2,18 +2,28 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 const OLD_HOSTS = ['inchirieri.vercel.app']
+const WWW_HOST = 'www.autoalba.ro'
 const CANONICAL_HOST = 'autoalba.ro'
 
 export async function proxy(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
 
-  // 301 redirect from internal Vercel domain to production domain
+  // 308 permanent redirect from internal Vercel domain to production domain
   if (OLD_HOSTS.includes(host)) {
     const url = request.nextUrl.clone()
     url.protocol = 'https:'
     url.host = CANONICAL_HOST
     url.port = ''
-    return NextResponse.redirect(url, { status: 301 })
+    return NextResponse.redirect(url, { status: 308 })
+  }
+
+  // 308 permanent redirect www → non-www (preserves path and query string)
+  if (host === WWW_HOST) {
+    const url = request.nextUrl.clone()
+    url.protocol = 'https:'
+    url.host = CANONICAL_HOST
+    url.port = ''
+    return NextResponse.redirect(url, { status: 308 })
   }
 
   // Only run Supabase auth guard for admin routes

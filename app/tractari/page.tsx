@@ -10,11 +10,38 @@ import {
   type TractariConfig,
   type VehicleType,
 } from '@/lib/tractari-pricing'
+import { SITE_URL, BUSINESS } from '@/lib/config'
+
+const TRACTARI_TITLE = 'Tractări Auto Alba Iulia | Expert Doi Trans'
+const TRACTARI_DESC =
+  'Tractări auto rapide în Alba Iulia și împrejurimi. Autoturisme, mașini avariate, autoutilitare. Prețuri transparente, tarif per km.'
 
 export const metadata: Metadata = {
   title: 'Tractări Auto Alba Iulia',
-  description:
-    'Tractări auto rapide în Alba Iulia și împrejurimi. Autoturisme, mașini avariate, autoutilitare. Prețuri transparente, tarif per km.',
+  description: TRACTARI_DESC,
+  alternates: { canonical: `${SITE_URL}/tractari` },
+  openGraph: {
+    type: 'website',
+    locale: 'ro_RO',
+    siteName: BUSINESS.name,
+    title: TRACTARI_TITLE,
+    description: TRACTARI_DESC,
+    url: `${SITE_URL}/tractari`,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TRACTARI_TITLE,
+    description: TRACTARI_DESC,
+  },
+  keywords: [
+    'tractari auto Alba Iulia',
+    'tractari Alba Iulia',
+    'asistenta rutiera Alba Iulia',
+    'tractari masini avariate',
+    'tractari autoutilitare',
+    'platforma auto Alba Iulia',
+    'Expert Doi Trans',
+  ],
 }
 
 async function getPageData(): Promise<{ config: TractariConfig; vehicleTypes: VehicleType[] }> {

@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import { Building2, MapPin, Phone, Clock } from 'lucide-react'
-import { BUSINESS } from '@/lib/config'
+import { BUSINESS, SITE_URL } from '@/lib/config'
 
 export const metadata: Metadata = {
   title: 'Contact — Tractări Auto',
   description: `Contactează ${BUSINESS.legalName} pentru servicii de tractări auto în Alba Iulia. Telefon ${BUSINESS.phoneDisplay}.`,
+  alternates: { canonical: `${SITE_URL}/tractari/contact` },
 }
 
 export default function ContactPage() {
